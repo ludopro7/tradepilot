@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: tradepilot
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: ""
+    startCommand: "python3 server.py"
+    autoDeploy: true
