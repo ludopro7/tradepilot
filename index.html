@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>TradePilot</title>
+<html lang="en"><head><meta charset="UTF-8"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>TradePilot</title>
 <style>
 body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;margin:0;background:#0b1020;color:#eef2ff}
 .wrap{max-width:700px;margin:auto;padding:0 16px 16px}
@@ -315,6 +315,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="tabbar">
 <button class="active" id="cTabBtn-command" onclick="showCryptoTab('command')">Command Center</button><button class="" id="cTabBtn-scan" onclick="showCryptoTab('scan')">Scan</button>
 <button id="cTabBtn-strategy" onclick="showCryptoTab('strategy')">Strategy</button>
+<button id="cTabBtn-optimizer" onclick="showCryptoTab('optimizer')">Optimizer</button>
 <button id="cTabBtn-backtest" onclick="showCryptoTab('backtest')">Backtest</button>
 <button id="cTabBtn-portfolio" onclick="showCryptoTab('portfolio')">Portfolio</button>
 <button id="cTabBtn-log" onclick="showCryptoTab('log')">Log &amp; Performance</button>
@@ -381,6 +382,17 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="card small">Changes here affect the Scan tab immediately  -  the scanner always reads the live config, never hardcoded values. This never places real orders; it only changes what counts as a valid signal.</div>
 </div>
 
+<div class="tabpanel" id="cTab-optimizer">
+<div class="card"><h3 style="margin-top:0">Strategy Optimizer</h3>
+<div class="small">Walk-forward grid search across EMA, ATR stop, reward/risk and direction. Simulation only - it never places an order and never changes the live Strategy Config automatically.</div>
+<label style="margin-top:10px">Symbol</label>
+<select id="optSymbol"><option value="ALL">ALL (top 20 by volume)</option></select>
+<button class="btn" style="margin-top:10px" onclick="runTradePilotOptimizer()">Run Optimizer</button>
+<div id="optStatus" class="small" style="margin-top:10px">Ready.</div>
+<div id="optResults" style="margin-top:12px"></div>
+</div>
+</div>
+
 <div class="tabpanel" id="cTab-backtest">
 <div class="card"><h3 style="margin-top:0">Backtest Center</h3>
 <div class="small">Simulation only  -  uses real historical Delta candles, but never places any real order. Uses the same live Strategy Control Center configuration as the scanner.</div>
@@ -435,6 +447,8 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="small">Enter your Delta API credentials here. They are encrypted locally in this browser and sent only over HTTPS to TradePilot for the request you initiate. They are not saved in Supabase.</div>
 <label>Delta API Key</label><input id="deltaApiKey" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Paste your Delta API Key">
 <label>Delta API Secret</label><input id="deltaApiSecret" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" placeholder="Paste your Delta API Secret">
+<label>Noble IP Proxy URL</label><input id="deltaProxyUrl" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Paste your Noble IP HTTPS proxy URL">
+<div class="small" style="margin-top:6px">The Noble URL is stored encrypted on this device and sent only with the Delta request. It is not stored in Supabase.</div>
 <div class="row2"><button class="btn btn2" onclick="toggleDeltaSecret()">Show / Hide Secret</button><button class="btn btn2" onclick="saveDeltaCredentials()">Save Credentials</button></div>
 <div class="row2" style="margin-top:8px"><button class="btn" onclick="connectDelta()">Test Delta Connection</button><button class="btn btn2" onclick="loadCryptoPortfolio()">Refresh Account</button></div>
 <div class="row2" style="margin-top:8px"><button class="btn4" style="width:100%;margin-left:0" onclick="clearDeltaCredentials()">Clear Saved Credentials</button></div>
@@ -476,7 +490,7 @@ function setApp(app){
   document.getElementById('appBtn-crypto').classList.toggle('active', app==='crypto');
   loginBanner.style.display = app==='stocks' ? '' : 'none';
   window.scrollTo({top:0});
-  if(app==='crypto') loadCommandCenter();
+  if(app==='crypto'){ loadCommandCenter(); loadOptimizerSymbols(); }
 }
 
 function showTab(name){
@@ -494,27 +508,60 @@ async function loadCommandCenter(){
     if(!r.ok || !j.ok) throw new Error(j.error||'Command Center unavailable');
     const st=j.state||{};
     const mode=String(st.mode||'paper').toUpperCase();
-    status.textContent='SYSTEM: '+mode+(st.emergency_stop?' â EMERGENCY STOP':'')+(st.trading_enabled?' â TRADING ENABLED':' â TRADING DISABLED');
+    status.textContent='SYSTEM: '+mode+(st.emergency_stop?' - EMERGENCY STOP':'')+(st.trading_enabled?' - TRADING ENABLED':' - TRADING DISABLED');
     const perf=j.performance||{}; const risk=j.risk||{}; const strategy=j.strategy||{};
-    document.getElementById('ccSummary').innerHTML='<div class="card"><b>Strategy</b><br>'+esc(strategy.name||'â')+' v'+esc(strategy.version??'â')+'</div><div class="card"><b>Today P&L</b><br>'+fmtNum(st.daily_pnl)+'</div><div class="card"><b>Paper P&L</b><br>'+fmtNum(perf.realized_pnl)+'</div><div class="card"><b>Win rate</b><br>'+fmtNum(perf.win_rate)+'%</div><div class="card"><b>Open</b><br>'+esc(st.open_positions??0)+'</div><div class="card"><b>Risk/trade</b><br>'+fmtNum(risk.max_risk_per_trade_pct)+'%</div>';
+    document.getElementById('ccSummary').innerHTML='<div class="card"><b>Strategy</b><br>'+esc(strategy.name||'-')+' v'+esc(strategy.version??'-')+'</div><div class="card"><b>Today P&L</b><br>'+fmtNum(st.daily_pnl)+'</div><div class="card"><b>Paper P&L</b><br>'+fmtNum(perf.realized_pnl)+'</div><div class="card"><b>Win rate</b><br>'+fmtNum(perf.win_rate)+'%</div><div class="card"><b>Open</b><br>'+esc(st.open_positions??0)+'</div><div class="card"><b>Risk/trade</b><br>'+fmtNum(risk.max_risk_per_trade_pct)+'%</div>';
     document.getElementById('ccSignals').innerHTML='<div class="card"><h4>Best Current Signals</h4>'+renderCCSignals(j.signals||[])+'</div>';
     document.getElementById('ccPositions').innerHTML='<div class="card"><h4>Open Positions</h4>'+renderCCRows(j.open_positions||[],'No open paper positions.')+'</div>';
     document.getElementById('ccTrades').innerHTML='<div class="card"><h4>Recent Decisions / Trades</h4>'+renderCCRows(j.recent_trades||[],'No recent trades.')+'</div>';
   }catch(e){ status.textContent='Command Center unavailable'; const x=document.getElementById('ccActionStatus'); if(x)x.textContent=e.message; }
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-function fmtNum(v){const n=Number(v);return Number.isFinite(n)?n.toLocaleString('en-IN',{maximumFractionDigits:2}):'â';}
-function renderCCSignals(a){if(!a.length)return '<div class="small">No actionable signals right now.</div>';return '<div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Score</th><th>Price</th><th>Quality</th></tr>'+a.slice(0,8).map(x=>'<tr><td>'+esc(x.symbol)+'</td><td>'+esc(x.signal)+'</td><td>'+fmtNum(x.score)+'</td><td>'+fmtNum(x.price)+'</td><td>'+esc(x.quality_tier||'â')+'</td></tr>').join('')+'</table></div>'; }
+function fmtNum(v){const n=Number(v);return Number.isFinite(n)?n.toLocaleString('en-IN',{maximumFractionDigits:2}):'-';}
+function renderCCSignals(a){if(!a.length)return '<div class="small">No actionable signals right now.</div>';return '<div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Score</th><th>Price</th><th>Quality</th></tr>'+a.slice(0,8).map(x=>'<tr><td>'+esc(x.symbol)+'</td><td>'+esc(x.signal)+'</td><td>'+fmtNum(x.score)+'</td><td>'+fmtNum(x.price)+'</td><td>'+esc(x.quality_tier||'-')+'</td></tr>').join('')+'</table></div>'; }
 function renderCCRows(a,empty){if(!a.length)return '<div class="small">'+empty+'</div>';return '<div class="tablewrap"><table><tr>'+Object.keys(a[0]).slice(0,8).map(k=>'<th>'+esc(k.replaceAll('_',' '))+'</th>').join('')+'</tr>'+a.slice(0,8).map(x=>'<tr>'+Object.keys(a[0]).slice(0,8).map(k=>'<td>'+esc(x[k])+'</td>').join('')+'</tr>').join('')+'</table></div>'; }
 async function ccEmergencyStop(){await ccControl({emergency_stop:true});}
 async function ccClearEmergencyStop(){await ccControl({emergency_stop:false});}
 async function ccControl(body){const el=document.getElementById('ccActionStatus');try{const r=await fetch(BASE+'/crypto-trading-control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'Control failed');el.textContent='Control updated.';loadCommandCenter();}catch(e){el.textContent=e.message;}}
 
+async function loadOptimizerSymbols(){
+  const sel=document.getElementById('optSymbol'); if(!sel) return;
+  try{
+    const r=await fetch(BASE+'/delta-products'); const j=await r.json();
+    const products=j.products||[];
+    const symbols=products.map(x=>x.symbol).filter(Boolean).slice(0,20);
+    sel.innerHTML='<option value="ALL">ALL (top 20 by volume)</option>'+symbols.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+  }catch(e){}
+}
+async function runTradePilotOptimizer(){
+  const status=document.getElementById('optStatus'); const out=document.getElementById('optResults'); const symbol=(document.getElementById('optSymbol')?.value||'ALL').toUpperCase();
+  status.textContent='Running optimizer...'; out.innerHTML='';
+  try{
+    let r=await fetch(BASE+'/crypto-strategy-optimizer?symbol='+encodeURIComponent(symbol),{method:'POST'});
+    if(!r.ok){r=await fetch(BASE+'/crypto-strategy-optimizer?symbol='+encodeURIComponent(symbol));}
+    const text=await r.text(); let j; try{j=JSON.parse(text);}catch(e){throw new Error('Optimizer returned a non-JSON response.');}
+    if(!r.ok||!j.ok) throw new Error(j.error||('Optimizer request failed ('+r.status+').'));
+    status.innerHTML='<span class="good">Optimizer completed in '+fmtNum(j.elapsed_ms||0)+' ms. Combinations tested: '+fmtNum(j.combinations_tested||0)+'.</span>';
+    const best=j.best_result||{};
+    let html='<div class="card"><h4 style="margin-top:0">Best Result</h4>';
+    if(best.symbol||best.score!=null){
+      html+='<div class="grid"><div><div class="k">Symbol</div><div class="v">'+esc(best.symbol||'-')+'</div></div><div><div class="k">Direction</div><div class="v">'+esc(best.direction||best.parameters?.direction||'-')+'</div></div><div><div class="k">Score</div><div class="v">'+fmtNum(best.score)+'</div></div><div><div class="k">Robust</div><div class="v">'+(best.robust?'YES':'NO')+'</div></div></div>';
+      if(best.parameters) html+='<pre style="white-space:pre-wrap;overflow:auto">'+esc(JSON.stringify(best.parameters,null,2))+'</pre>';
+      if(best.metrics) html+='<pre style="white-space:pre-wrap;overflow:auto">'+esc(JSON.stringify(best.metrics,null,2))+'</pre>';
+    }else html+='<div class="small">No valid optimization result was returned.</div>';
+    html+='</div>';
+    if(Array.isArray(j.failures)&&j.failures.length) html+='<div class="card"><h4 style="margin-top:0">Symbol Failures</h4><pre style="white-space:pre-wrap;overflow:auto">'+esc(JSON.stringify(j.failures,null,2))+'</pre></div>';
+    out.innerHTML=html;
+  }catch(e){
+    status.innerHTML='<span class="bad">Optimizer failed: '+esc(e.message||'Could not reach optimizer.')+'</span>';
+  }
+}
+
 function showCryptoTab(name){
   document.querySelectorAll('#app-crypto .tabpanel').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('#app-crypto .tabbar button').forEach(el => el.classList.remove('active'));
   document.getElementById('cTab-'+name).classList.add('active');
-  if(name==='command') loadCommandCenter();
+  if(name==='command') loadCommandCenter(); if(name==='optimizer') loadOptimizerSymbols();
   document.getElementById('cTabBtn-'+name).classList.add('active');
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -1116,15 +1163,19 @@ async function getLocalDeltaKey(){
 async function saveDeltaCredentials(){
   const key=(document.getElementById('deltaApiKey').value||'').trim();
   const secret=(document.getElementById('deltaApiSecret').value||'').trim();
+  const proxyUrl=(document.getElementById('deltaProxyUrl')?.value||'').trim();
   const st=document.getElementById('deltaCredentialStatus');
   if(!key||!secret){st.innerHTML='<span class="bad">Enter both API Key and API Secret.</span>';return false;}
   try{
     const aes=await getLocalDeltaKey(); const iv=crypto.getRandomValues(new Uint8Array(12));
-    const plain=new TextEncoder().encode(JSON.stringify({api_key:key,api_secret:secret}));
+    const plain=new TextEncoder().encode(JSON.stringify({api_key:key,api_secret:secret,proxy_url:proxyUrl}));
     const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},aes,plain);
     const db=await openDeltaCredDb(); const tx=db.transaction(DELTA_CRED_STORE,'readwrite');
     tx.objectStore(DELTA_CRED_STORE).put({iv:bufToB64(iv),data:bufToB64(cipher)},'delta');
-    tx.oncomplete=()=>{st.innerHTML='<span class="good">Credentials saved securely on this device.</span>'; document.getElementById('deltaApiSecret').value='';};
+    tx.oncomplete=()=>{
+      st.innerHTML='<span class="good">Credentials and Noble URL saved securely on this device.</span>';
+      document.getElementById('deltaApiSecret').value='';
+    };
     tx.onerror=()=>{st.innerHTML='<span class="bad">Could not save credentials on this device.</span>';};
     return true;
   }catch(e){st.innerHTML='<span class="bad">Secure local storage is unavailable in this browser.</span>';return false;}
@@ -1139,20 +1190,32 @@ async function getDeltaCredentials(){
 }
 async function hasDeltaCredentials(){return !!(await getDeltaCredentials());}
 async function clearDeltaCredentials(){
-  try{const db=await openDeltaCredDb();const tx=db.transaction(DELTA_CRED_STORE,'readwrite');tx.objectStore(DELTA_CRED_STORE).delete('delta');tx.oncomplete=()=>{document.getElementById('deltaCredentialStatus').innerHTML='<span class="small">Saved credentials cleared from this browser.</span>';document.getElementById('deltaApiKey').value='';document.getElementById('deltaApiSecret').value='';document.getElementById('deltaConnectionStatus').textContent='No Delta credentials saved.';};}catch(e){}
+  try{
+    const db=await openDeltaCredDb();const tx=db.transaction(DELTA_CRED_STORE,'readwrite');
+    tx.objectStore(DELTA_CRED_STORE).delete('delta');
+    tx.oncomplete=()=>{
+      document.getElementById('deltaCredentialStatus').innerHTML='<span class="small">Saved credentials cleared from this browser.</span>';
+      document.getElementById('deltaApiKey').value='';
+      document.getElementById('deltaApiSecret').value='';
+      if(document.getElementById('deltaProxyUrl')) document.getElementById('deltaProxyUrl').value='';
+      document.getElementById('deltaConnectionStatus').textContent='No Delta credentials saved.';
+    };
+  }catch(e){}
 }
 function toggleDeltaSecret(){const el=document.getElementById('deltaApiSecret');el.type=el.type==='password'?'text':'password';}
 async function loadDeltaCredentialState(){
   const st=document.getElementById('deltaCredentialStatus'); const creds=await getDeltaCredentials();
-  st.innerHTML=creds?'<span class="good">Encrypted Delta credentials are saved on this device.</span>':'<span class="small">No credentials saved in this browser.</span>';
-  if(creds) document.getElementById('deltaApiKey').value=creds.api_key||'';
+  st.innerHTML=creds?'<span class="good">Encrypted Delta credentials and Noble URL are saved on this device.</span>':'<span class="small">No credentials saved in this browser.</span>';
+  if(creds){
+    document.getElementById('deltaApiKey').value=creds.api_key||'';
+    if(document.getElementById('deltaProxyUrl')) document.getElementById('deltaProxyUrl').value=creds.proxy_url||'';
+  }
 }
-
 async function deltaPrivate(action){
   const creds=await getDeltaCredentials();
   if(!creds) return {ok:false,error:'No Delta API credentials saved in this dashboard.'};
   try{
-    const r=await fetch(BASE+'/delta-connection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,api_key:creds.api_key,api_secret:creds.api_secret})});
+    const r=await fetch(BASE+'/delta-connection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,api_key:creds.api_key,api_secret:creds.api_secret,proxy_url:creds.proxy_url||''})});
     return await r.json();
   }catch(e){
     return {ok:false,error:'Could not reach Delta connection service.'};
