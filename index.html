@@ -1077,15 +1077,22 @@ function renderCryptoOrdersTable(){
     const pnlCell = isClosed ? '<span class="'+(o.pnl>=0?'good':'bad')+'">'+Number(o.pnl).toFixed(2)+'</span>' : ' - ';
     html += '<tr><td>'+d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+'</td><td>'+o.symbol+'</td><td class="'+(o.side==='LONG'?'good':'bad')+'">'+o.side+'</td><td>'+(o.leverage||' - ')+'x</td><td>'+o.qty+'</td>'+
       '<td><span class="statustag '+(isClosed?'closed':'open')+'">'+(isClosed?'Closed':'Open')+'</span></td><td>'+pnlCell+'</td>'+
-      '<td>'+(isClosed?'':'<button class="btn5" onclick=\'cCloseTrade('+o.id+')\'>Close</button>')+'<button class="btn3" onclick=\'cEditEntry('+o.id+')\'>Edit</button><button class="btn4" onclick=\'cDeleteEntry('+o.id+')\'>Delete</button></td></tr>';
+      '<td>'+(isClosed?'':'<button class="btn5" onclick=\'cCloseTrade('+o.id+')\'>Close @ Market</button>')+'<button class="btn3" onclick=\'cEditEntry('+o.id+')\'>Edit</button><button class="btn4" onclick=\'cDeleteEntry('+o.id+')\'>Delete</button></td></tr>';
   });
   el.innerHTML = html + '</table>';
 }
 async function cCloseTrade(id){
-  const exitStr = prompt('Enter the actual exit price:'); if(exitStr===null) return;
-  const exitPrice = parseFloat(exitStr); if(isNaN(exitPrice) || exitPrice<=0){ alert('Enter a valid price.'); return; }
-  try{ const r = await fetch(BASE+'/crypto-trade-log', {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id, close:true, exit_price: exitPrice})}); const j = await r.json();
-    if(r.ok){ loadCryptoOrders(); } else { alert(j.error||'Could not close.'); } }catch(e){ alert('Could not reach backend.'); }
+  const o=cOrders.find(x=>x.id===id); if(!o) return;
+  const ok=confirm('Close '+o.symbol+' '+o.side+' at the current Delta market price?\n\nThis closes the PAPER trade only. No real Delta order will be sent.');
+  if(!ok) return;
+  try{
+    const r=await fetch(BASE+'/crypto-trade-log',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,close:true,close_at_market:true})});
+    const j=await r.json();
+    if(r.ok){
+      alert(o.symbol+' closed at '+Number(j.exitPrice).toPrecision(10)+'\nPaper P&L: '+Number(j.pnl||0).toFixed(2));
+      loadCryptoOrders();
+    } else { alert(j.error||'Could not close.'); }
+  }catch(e){ alert('Could not reach backend.'); }
 }
 function cEditEntry(id){
   const o = cOrders.find(x => x.id === id); if(!o) return; cEditingId = id;
