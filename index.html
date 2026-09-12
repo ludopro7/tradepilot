@@ -313,12 +313,16 @@ input:checked + .slider:before{transform:translateX(20px)}
 
 <div id="app-crypto" style="display:none">
 <div class="tabbar">
-<button class="active" id="cTabBtn-scan" onclick="showCryptoTab('scan')">Scan</button>
+<button class="active" id="cTabBtn-command" onclick="showCryptoTab('command')">Command Center</button><button class="" id="cTabBtn-scan" onclick="showCryptoTab('scan')">Scan</button>
 <button id="cTabBtn-strategy" onclick="showCryptoTab('strategy')">Strategy</button>
 <button id="cTabBtn-backtest" onclick="showCryptoTab('backtest')">Backtest</button>
 <button id="cTabBtn-portfolio" onclick="showCryptoTab('portfolio')">Portfolio</button>
 <button id="cTabBtn-log" onclick="showCryptoTab('log')">Log &amp; Performance</button>
 <button id="cTabBtn-settings" onclick="showCryptoTab('settings')">Settings</button></div>
+<div class="tabpanel active" id="cTab-command">
+<div class="card"><h3 style="margin-top:0">TradePilot Command Center</h3><div class="small">Unified Delta futures control and decision view. Live trading remains OFF unless explicitly armed and enabled.</div><div id="ccStatus" class="hero" style="margin-top:8px">Loading...</div><div id="ccSummary" class="row2" style="margin-top:10px"></div><div id="ccSignals" style="margin-top:12px"></div><div id="ccPositions" style="margin-top:12px"></div><div id="ccTrades" style="margin-top:12px"></div><div class="row2" style="margin-top:12px"><button class="btn" onclick="loadCommandCenter()">Refresh Command Center</button><button class="btn btn2" onclick="ccEmergencyStop()">Emergency Stop</button><button class="btn btn2" onclick="ccClearEmergencyStop()">Clear Stop</button></div><div class="small" id="ccActionStatus" style="margin-top:8px"></div></div>
+</div>
+
 <div class="tabpanel active" id="cTab-scan">
 <div class="card"><h3 style="margin-top:0">Crypto Futures Scanner  -  Delta Exchange India</h3>
 <div class="small">Public data, updates 24/7. Thresholds come from your live strategy config  -  edit them in the Strategy tab.</div>
@@ -326,8 +330,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="hero" id="cScanState" style="margin-top:8px">Not scanned yet</div>
 <div class="small" id="cScanDetail"></div>
 <button class="btn" style="margin-top:10px" onclick="runCryptoScan()">Scan Now</button>
-<div class="row2" style="margin-top:8px"><button class="btn btn2" onclick="runPaperEngine()">Run Paper Engine</button><div id="paperEngineStatus" class="small">Paper engine: ready</div></div>
-<div class="small" style="margin-top:6px">Simulation only: valid signals can open paper positions automatically; the engine closes them at stop/target and records P&amp;L. Real Delta orders remain OFF.</div>
 <div id="cScanResults" style="margin-top:12px"></div></div>
 <div class="card" id="cTicketCard" style="display:none"><h3 style="margin-top:0">Trade Plan</h3><div id="cTicketBody"></div></div>
 </div>
@@ -425,7 +427,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div><div class="k">Total logged</div><div class="v" id="cPerfCount">0</div></div>
 <div><div class="k">Closed</div><div class="v" id="cPerfClosed">0</div></div>
 <div><div class="k">Win rate</div><div class="v" id="cPerfWinRate"> - </div></div>
-<div><div class="k">Total P&L</div><div class="v" id="cPerfTotal">0</div></div></div><div id="cPerfAdvanced" style="margin-top:12px"></div></div>
+<div><div class="k">Total P&L</div><div class="v" id="cPerfTotal">0</div></div></div></div>
 <div class="card"><h3 style="margin-top:0">Your Trade Log</h3><div id="cOrders" class="small">Tap refresh to load.</div><button class="btn btn2" onclick="loadCryptoOrders()">Refresh</button></div>
 </div>
 <div class="tabpanel" id="cTab-settings">
@@ -433,24 +435,12 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="small">Enter your Delta API credentials here. They are encrypted locally in this browser and sent only over HTTPS to TradePilot for the request you initiate. They are not saved in Supabase.</div>
 <label>Delta API Key</label><input id="deltaApiKey" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Paste your Delta API Key">
 <label>Delta API Secret</label><input id="deltaApiSecret" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" placeholder="Paste your Delta API Secret">
-<label>Noble IP Proxy URL</label><input id="deltaProxyUrl" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Paste Noble IP HTTPS proxy URL (optional until whitelist is fixed)">
 <div class="row2"><button class="btn btn2" onclick="toggleDeltaSecret()">Show / Hide Secret</button><button class="btn btn2" onclick="saveDeltaCredentials()">Save Credentials</button></div>
 <div class="row2" style="margin-top:8px"><button class="btn" onclick="connectDelta()">Test Delta Connection</button><button class="btn btn2" onclick="loadCryptoPortfolio()">Refresh Account</button></div>
 <div class="row2" style="margin-top:8px"><button class="btn4" style="width:100%;margin-left:0" onclick="clearDeltaCredentials()">Clear Saved Credentials</button></div>
 <div id="deltaCredentialStatus" class="small" style="margin-top:8px">No credentials saved in this browser.</div>
 <div id="deltaConnectionStatus" class="small" style="margin-top:8px">Enter and save your Delta credentials, then test the connection.</div>
 <div class="small" style="margin-top:8px">For first verification, use a Delta API key without trading permission. Do not enable real-money trading yet.</div></div>
-<div class="card"><h3 style="margin-top:0">Trading Control Center</h3>
-<div class="small">This is the server-side gate for the execution engine. Paper mode never sends a real order. Armed mode allows preparation but blocks execution. Live mode is blocked unless explicitly enabled.</div>
-<div class="grid" style="margin-top:10px"><div><div class="k">Current mode</div><div class="v" id="deltaTradeMode">PAPER</div></div><div><div class="k">Trading</div><div class="v" id="deltaTradeEnabled">OFF</div></div><div><div class="k">Emergency stop</div><div class="v" id="deltaEmergency">OFF</div></div></div>
-<div class="row2" style="margin-top:10px"><button class="btn btn2" onclick="setDeltaTradeMode('paper')">PAPER</button><button class="btn btn2" onclick="setDeltaTradeMode('armed')">ARMED</button></div>
-<div class="row2" style="margin-top:8px"><button class="btnLive" onclick="enableDeltaLive()">ENABLE LIVE</button><button class="btn4" onclick="toggleDeltaEmergency()">EMERGENCY STOP</button></div>
-<div id="deltaTradeControlStatus" class="small" style="margin-top:8px">Loading trading control...</div></div>
-<div class="card"><h3 style="margin-top:0">Execution Engine Test</h3>
-<div class="small">Use this to test the full strategy-to-broker execution path in PAPER mode. It will not place a real order.</div>
-<div class="row2"><div><label>Symbol</label><input id="deltaExecSymbol" value="BTCUSD" autocapitalize="characters"></div><div><label>Quantity</label><input id="deltaExecQty" type="number" min="1" step="1" value="1"></div></div>
-<div class="row2"><button class="btn" onclick="testDeltaExecution('buy')">Paper BUY</button><button class="btn btn2" onclick="testDeltaExecution('sell')">Paper SELL</button></div>
-<div id="deltaExecResult" class="small" style="margin-top:8px"></div></div>
 <div class="card"><h3 style="margin-top:0">Capital &amp; Risk</h3>
 <label>Capital</label><input id="cCapital" type="number" placeholder="10000">
 <label>Risk per trade (%)</label><input id="cRiskPct" type="number" step="0.1" placeholder="1.0">
@@ -486,6 +476,7 @@ function setApp(app){
   document.getElementById('appBtn-crypto').classList.toggle('active', app==='crypto');
   loginBanner.style.display = app==='stocks' ? '' : 'none';
   window.scrollTo({top:0});
+  if(app==='crypto') loadCommandCenter();
 }
 
 function showTab(name){
@@ -495,10 +486,35 @@ function showTab(name){
   document.getElementById('tabBtn-'+name).classList.add('active');
   window.scrollTo({top:0, behavior:'smooth'});
 }
+async function loadCommandCenter(){
+  const status=document.getElementById('ccStatus'); if(!status) return;
+  status.textContent='Loading Command Center...';
+  try{
+    const r=await fetch(BASE+'/crypto-command-center'); const j=await r.json();
+    if(!r.ok || !j.ok) throw new Error(j.error||'Command Center unavailable');
+    const st=j.state||{};
+    const mode=String(st.mode||'paper').toUpperCase();
+    status.textContent='SYSTEM: '+mode+(st.emergency_stop?' â EMERGENCY STOP':'')+(st.trading_enabled?' â TRADING ENABLED':' â TRADING DISABLED');
+    const perf=j.performance||{}; const risk=j.risk||{}; const strategy=j.strategy||{};
+    document.getElementById('ccSummary').innerHTML='<div class="card"><b>Strategy</b><br>'+esc(strategy.name||'â')+' v'+esc(strategy.version??'â')+'</div><div class="card"><b>Today P&L</b><br>'+fmtNum(st.daily_pnl)+'</div><div class="card"><b>Paper P&L</b><br>'+fmtNum(perf.realized_pnl)+'</div><div class="card"><b>Win rate</b><br>'+fmtNum(perf.win_rate)+'%</div><div class="card"><b>Open</b><br>'+esc(st.open_positions??0)+'</div><div class="card"><b>Risk/trade</b><br>'+fmtNum(risk.max_risk_per_trade_pct)+'%</div>';
+    document.getElementById('ccSignals').innerHTML='<div class="card"><h4>Best Current Signals</h4>'+renderCCSignals(j.signals||[])+'</div>';
+    document.getElementById('ccPositions').innerHTML='<div class="card"><h4>Open Positions</h4>'+renderCCRows(j.open_positions||[],'No open paper positions.')+'</div>';
+    document.getElementById('ccTrades').innerHTML='<div class="card"><h4>Recent Decisions / Trades</h4>'+renderCCRows(j.recent_trades||[],'No recent trades.')+'</div>';
+  }catch(e){ status.textContent='Command Center unavailable'; const x=document.getElementById('ccActionStatus'); if(x)x.textContent=e.message; }
+}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function fmtNum(v){const n=Number(v);return Number.isFinite(n)?n.toLocaleString('en-IN',{maximumFractionDigits:2}):'â';}
+function renderCCSignals(a){if(!a.length)return '<div class="small">No actionable signals right now.</div>';return '<div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Score</th><th>Price</th><th>Quality</th></tr>'+a.slice(0,8).map(x=>'<tr><td>'+esc(x.symbol)+'</td><td>'+esc(x.signal)+'</td><td>'+fmtNum(x.score)+'</td><td>'+fmtNum(x.price)+'</td><td>'+esc(x.quality_tier||'â')+'</td></tr>').join('')+'</table></div>'; }
+function renderCCRows(a,empty){if(!a.length)return '<div class="small">'+empty+'</div>';return '<div class="tablewrap"><table><tr>'+Object.keys(a[0]).slice(0,8).map(k=>'<th>'+esc(k.replaceAll('_',' '))+'</th>').join('')+'</tr>'+a.slice(0,8).map(x=>'<tr>'+Object.keys(a[0]).slice(0,8).map(k=>'<td>'+esc(x[k])+'</td>').join('')+'</tr>').join('')+'</table></div>'; }
+async function ccEmergencyStop(){await ccControl({emergency_stop:true});}
+async function ccClearEmergencyStop(){await ccControl({emergency_stop:false});}
+async function ccControl(body){const el=document.getElementById('ccActionStatus');try{const r=await fetch(BASE+'/crypto-trading-control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'Control failed');el.textContent='Control updated.';loadCommandCenter();}catch(e){el.textContent=e.message;}}
+
 function showCryptoTab(name){
   document.querySelectorAll('#app-crypto .tabpanel').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('#app-crypto .tabbar button').forEach(el => el.classList.remove('active'));
   document.getElementById('cTab-'+name).classList.add('active');
+  if(name==='command') loadCommandCenter();
   document.getElementById('cTabBtn-'+name).classList.add('active');
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -965,24 +981,6 @@ async function loadCryptoPortfolio(){
     cPositions.innerHTML = html || 'No open positions.';
   }catch(e){ cBalances.innerHTML = '<span class="bad">Connect Delta Exchange India in Settings first.</span>'; }
 }
-async function runPaperEngine(){
-  const el=document.getElementById('paperEngineStatus');
-  if(el) el.innerHTML='<span class="small">Checking signals and paper positions...</span>';
-  try{
-    const r=await fetch(BASE+'/crypto-paper-engine',{cache:'no-store'}); const j=await r.json();
-    if(!r.ok||!j.ok){ if(el) el.innerHTML='<span class="bad">Paper engine error: '+(j.error||'unknown error')+'</span>'; return j; }
-    const opened=j.opened||[], closed=j.closed||[];
-    if(el) el.innerHTML='<span class="good">Paper engine OK â open '+(j.activePositions||0)+' | opened '+opened.length+' | closed '+closed.length+' | daily P&amp;L '+Number(j.dailyPnl||0).toFixed(2)+'</span>'+(j.halted?' <span class="bad">HALTED</span>':'');
-    loadCryptoOrders();
-    return j;
-  }catch(e){ if(el) el.innerHTML='<span class="bad">Could not reach paper engine.</span>'; return {ok:false,error:String(e)}; }
-}
-let paperEngineTimer=null;
-function startPaperEnginePolling(){
-  if(paperEngineTimer) return;
-  runPaperEngine();
-  paperEngineTimer=setInterval(runPaperEngine,30000);
-}
 async function runCryptoScan(){
   cScanState.textContent = 'Scanning...'; cScanResults.innerHTML = ''; cTicketCard.style.display = 'none';
   try{
@@ -1056,18 +1054,11 @@ async function loadCryptoOrders(){
   cOrders = j.data || []; renderCryptoPerformance(); renderCryptoOrdersTable();
 }
 function renderCryptoPerformance(){
-  cPerfCount.textContent=cOrders.length; const closed=cOrders.filter(o=>o.status==='closed'); cPerfClosed.textContent=closed.length;
-  const total=closed.reduce((s,o)=>s+Number(o.pnl||0),0); const adv=document.getElementById('cPerfAdvanced');
-  if(!closed.length){cPerfWinRate.textContent=' - ';cPerfTotal.textContent='0';cPerfTotal.className='v';if(adv)adv.innerHTML='<div class="small">No closed paper trades yet. Run the Paper Engine to build performance history.</div>';return;}
-  const wins=closed.filter(o=>Number(o.pnl)>0).length; cPerfWinRate.textContent=Math.round(wins/closed.length*100)+'%'; cPerfTotal.textContent=total.toFixed(2); cPerfTotal.className='v '+(total>=0?'good':'bad');
-  const ordered=[...closed].sort((a,b)=>new Date(a.closed_at||a.created_at)-new Date(b.closed_at||b.created_at)); const capital=Number(cryptoSettings?.capital||10000); let eq=capital,peak=capital,maxDD=0,gp=0,gl=0; const curve=[capital];
-  ordered.forEach(o=>{const p=Number(o.pnl||0);eq+=p;curve.push(eq);if(p>0)gp+=p;else gl+=Math.abs(p);peak=Math.max(peak,eq);maxDD=Math.max(maxDD,peak?100*(peak-eq)/peak:0);});
-  const pf=gl?gp/gl:(gp?Infinity:0),avg=total/closed.length,best=Math.max(...closed.map(o=>Number(o.pnl||0))),worst=Math.min(...closed.map(o=>Number(o.pnl||0)));
-  if(adv)adv.innerHTML='<div class="sectionhead">Paper Equity Curve</div><div class="chartbox">'+cryptoEquitySvg(curve,capital)+'</div><div class="grid" style="margin-top:10px">'+
-  '<div><div class="k">Paper Equity</div><div class="v '+(eq>=capital?'good':'bad')+'">'+eq.toFixed(2)+'</div></div>'+ '<div><div class="k">ROI</div><div class="v '+(total>=0?'good':'bad')+'">'+(capital?100*total/capital:0).toFixed(2)+'%</div></div>'+ '<div><div class="k">Profit Factor</div><div class="v">'+(Number.isFinite(pf)?pf.toFixed(2):'â')+'</div></div>'+ '<div><div class="k">Avg Trade</div><div class="v '+(avg>=0?'good':'bad')+'">'+avg.toFixed(2)+'</div></div>'+ '<div><div class="k">Best Trade</div><div class="v good">'+best.toFixed(2)+'</div></div>'+ '<div><div class="k">Worst Trade</div><div class="v bad">'+worst.toFixed(2)+'</div></div>'+ '<div><div class="k">Max Drawdown</div><div class="v bad">'+maxDD.toFixed(2)+'%</div></div>'+ '<div><div class="k">Open Paper</div><div class="v">'+cOrders.filter(o=>o.status!=='closed').length+'</div></div></div>';
+  cPerfCount.textContent = cOrders.length; const closed = cOrders.filter(o => o.status==='closed'); cPerfClosed.textContent = closed.length;
+  if(!closed.length){ cPerfWinRate.textContent = ' - '; cPerfTotal.textContent = '0'; cPerfTotal.className='v'; return; }
+  const wins = closed.filter(o => Number(o.pnl) > 0).length; const total = closed.reduce((s,o) => s + Number(o.pnl||0), 0);
+  cPerfWinRate.textContent = Math.round((wins/closed.length)*100) + '%'; cPerfTotal.textContent = total.toFixed(2); cPerfTotal.className = 'v ' + (total>=0?'good':'bad');
 }
-function cryptoEquitySvg(values,base){if(!values||values.length<2)return '';const W=760,H=190,P=12,min=Math.min(...values),max=Math.max(...values),span=(max-min)||1;const pts=values.map((v,i)=>{const x=P+i/(values.length-1)*(W-2*P),y=H-P-(v-min)/span*(H-2*P);return x.toFixed(1)+','+y.toFixed(1)}).join(' ');const y0=H-P-(base-min)/span*(H-2*P);return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="190" aria-label="Paper equity curve"><line x1="'+P+'" y1="'+y0.toFixed(1)+'" x2="'+(W-P)+'" y2="'+y0.toFixed(1)+'" stroke="currentColor" opacity=".22" stroke-dasharray="4 4"/><polyline points="'+pts+'" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><text x="'+P+'" y="16" fill="currentColor" opacity=".65" font-size="11">Start '+Number(base).toFixed(0)+'</text><text x="'+(W-P-100)+'" y="16" fill="currentColor" opacity=".65" font-size="11">Now '+Number(values.at(-1)).toFixed(2)+'</text></svg>';}
-
 function renderCryptoOrdersTable(){
   const el = document.getElementById('cOrders');
   if(!cOrders.length){ el.innerHTML = 'No trades logged yet.'; return; }
@@ -1077,22 +1068,15 @@ function renderCryptoOrdersTable(){
     const pnlCell = isClosed ? '<span class="'+(o.pnl>=0?'good':'bad')+'">'+Number(o.pnl).toFixed(2)+'</span>' : ' - ';
     html += '<tr><td>'+d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+'</td><td>'+o.symbol+'</td><td class="'+(o.side==='LONG'?'good':'bad')+'">'+o.side+'</td><td>'+(o.leverage||' - ')+'x</td><td>'+o.qty+'</td>'+
       '<td><span class="statustag '+(isClosed?'closed':'open')+'">'+(isClosed?'Closed':'Open')+'</span></td><td>'+pnlCell+'</td>'+
-      '<td>'+(isClosed?'':'<button class="btn5" onclick=\'cCloseTrade('+o.id+')\'>Close @ Market</button>')+'<button class="btn3" onclick=\'cEditEntry('+o.id+')\'>Edit</button><button class="btn4" onclick=\'cDeleteEntry('+o.id+')\'>Delete</button></td></tr>';
+      '<td>'+(isClosed?'':'<button class="btn5" onclick=\'cCloseTrade('+o.id+')\'>Close</button>')+'<button class="btn3" onclick=\'cEditEntry('+o.id+')\'>Edit</button><button class="btn4" onclick=\'cDeleteEntry('+o.id+')\'>Delete</button></td></tr>';
   });
   el.innerHTML = html + '</table>';
 }
 async function cCloseTrade(id){
-  const o=cOrders.find(x=>x.id===id); if(!o) return;
-  const ok=confirm('Close '+o.symbol+' '+o.side+' at the current Delta market price?\n\nThis closes the PAPER trade only. No real Delta order will be sent.');
-  if(!ok) return;
-  try{
-    const r=await fetch(BASE+'/crypto-trade-log',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,close:true,close_at_market:true})});
-    const j=await r.json();
-    if(r.ok){
-      alert(o.symbol+' closed at '+Number(j.exitPrice).toPrecision(10)+'\nPaper P&L: '+Number(j.pnl||0).toFixed(2));
-      loadCryptoOrders();
-    } else { alert(j.error||'Could not close.'); }
-  }catch(e){ alert('Could not reach backend.'); }
+  const exitStr = prompt('Enter the actual exit price:'); if(exitStr===null) return;
+  const exitPrice = parseFloat(exitStr); if(isNaN(exitPrice) || exitPrice<=0){ alert('Enter a valid price.'); return; }
+  try{ const r = await fetch(BASE+'/crypto-trade-log', {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id, close:true, exit_price: exitPrice})}); const j = await r.json();
+    if(r.ok){ loadCryptoOrders(); } else { alert(j.error||'Could not close.'); } }catch(e){ alert('Could not reach backend.'); }
 }
 function cEditEntry(id){
   const o = cOrders.find(x => x.id === id); if(!o) return; cEditingId = id;
@@ -1132,16 +1116,15 @@ async function getLocalDeltaKey(){
 async function saveDeltaCredentials(){
   const key=(document.getElementById('deltaApiKey').value||'').trim();
   const secret=(document.getElementById('deltaApiSecret').value||'').trim();
-  const proxyUrl=(document.getElementById('deltaProxyUrl').value||'').trim();
   const st=document.getElementById('deltaCredentialStatus');
   if(!key||!secret){st.innerHTML='<span class="bad">Enter both API Key and API Secret.</span>';return false;}
   try{
     const aes=await getLocalDeltaKey(); const iv=crypto.getRandomValues(new Uint8Array(12));
-    const plain=new TextEncoder().encode(JSON.stringify({api_key:key,api_secret:secret,proxy_url:proxyUrl}));
+    const plain=new TextEncoder().encode(JSON.stringify({api_key:key,api_secret:secret}));
     const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},aes,plain);
     const db=await openDeltaCredDb(); const tx=db.transaction(DELTA_CRED_STORE,'readwrite');
     tx.objectStore(DELTA_CRED_STORE).put({iv:bufToB64(iv),data:bufToB64(cipher)},'delta');
-    tx.oncomplete=()=>{st.innerHTML='<span class="good">Credentials saved securely on this device.</span>'; document.getElementById('deltaApiSecret').value=''; document.getElementById('deltaProxyUrl').value='';};
+    tx.oncomplete=()=>{st.innerHTML='<span class="good">Credentials saved securely on this device.</span>'; document.getElementById('deltaApiSecret').value='';};
     tx.onerror=()=>{st.innerHTML='<span class="bad">Could not save credentials on this device.</span>';};
     return true;
   }catch(e){st.innerHTML='<span class="bad">Secure local storage is unavailable in this browser.</span>';return false;}
@@ -1156,20 +1139,20 @@ async function getDeltaCredentials(){
 }
 async function hasDeltaCredentials(){return !!(await getDeltaCredentials());}
 async function clearDeltaCredentials(){
-  try{const db=await openDeltaCredDb();const tx=db.transaction(DELTA_CRED_STORE,'readwrite');tx.objectStore(DELTA_CRED_STORE).delete('delta');tx.oncomplete=()=>{document.getElementById('deltaCredentialStatus').innerHTML='<span class="small">Saved credentials cleared from this browser.</span>';document.getElementById('deltaApiKey').value='';document.getElementById('deltaApiSecret').value='';document.getElementById('deltaProxyUrl').value='';document.getElementById('deltaConnectionStatus').textContent='No Delta credentials saved.';};}catch(e){}
+  try{const db=await openDeltaCredDb();const tx=db.transaction(DELTA_CRED_STORE,'readwrite');tx.objectStore(DELTA_CRED_STORE).delete('delta');tx.oncomplete=()=>{document.getElementById('deltaCredentialStatus').innerHTML='<span class="small">Saved credentials cleared from this browser.</span>';document.getElementById('deltaApiKey').value='';document.getElementById('deltaApiSecret').value='';document.getElementById('deltaConnectionStatus').textContent='No Delta credentials saved.';};}catch(e){}
 }
 function toggleDeltaSecret(){const el=document.getElementById('deltaApiSecret');el.type=el.type==='password'?'text':'password';}
 async function loadDeltaCredentialState(){
   const st=document.getElementById('deltaCredentialStatus'); const creds=await getDeltaCredentials();
   st.innerHTML=creds?'<span class="good">Encrypted Delta credentials are saved on this device.</span>':'<span class="small">No credentials saved in this browser.</span>';
-  if(creds){ document.getElementById('deltaApiKey').value=creds.api_key||''; document.getElementById('deltaProxyUrl').value=creds.proxy_url||''; }
+  if(creds) document.getElementById('deltaApiKey').value=creds.api_key||'';
 }
 
 async function deltaPrivate(action){
   const creds=await getDeltaCredentials();
   if(!creds) return {ok:false,error:'No Delta API credentials saved in this dashboard.'};
   try{
-    const r=await fetch(BASE+'/delta-connection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,api_key:creds.api_key,api_secret:creds.api_secret,proxy_url:creds.proxy_url||''})});
+    const r=await fetch(BASE+'/delta-connection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,api_key:creds.api_key,api_secret:creds.api_secret})});
     return await r.json();
   }catch(e){
     return {ok:false,error:'Could not reach Delta connection service.'};
@@ -1187,42 +1170,6 @@ async function loadDeltaConnectionState(){
   if(!(await hasDeltaCredentials())){status.textContent='Enter and save your Delta credentials, then test the connection.';return;}
   status.textContent='Saved credentials found. Tap Test Delta Connection to verify.';
 }
-async function loadDeltaTradingControl(){
-  const status=document.getElementById('deltaTradeControlStatus');
-  try{
-    const r=await fetch(BASE+'/crypto-trading-control'); const j=await r.json();
-    if(!j.ok){status.innerHTML='<span class="bad">Could not load trading control.</span>';return;}
-    renderDeltaTradingControl(j.state);
-  }catch(e){status.innerHTML='<span class="bad">Could not reach trading control.</span>';}
-}
-function renderDeltaTradingControl(st){
-  const mode=String(st?.mode||'paper').toUpperCase();
-  document.getElementById('deltaTradeMode').textContent=mode;
-  document.getElementById('deltaTradeEnabled').textContent=st?.trading_enabled?'ON':'OFF';
-  document.getElementById('deltaEmergency').textContent=st?.emergency_stop?'ON':'OFF';
-  const el=document.getElementById('deltaTradeControlStatus');
-  el.innerHTML=st?.emergency_stop?'<span class="bad">EMERGENCY STOP ACTIVE - all execution is blocked.</span>':(mode==='LIVE'&&st?.trading_enabled?'<span class="bad">LIVE trading is ENABLED. Real orders can be sent only after explicit confirmation.</span>':'<span class="good">Execution gate: '+mode+' / trading '+(st?.trading_enabled?'ON':'OFF')+'.</span>');
-}
-async function setDeltaTradeMode(mode){
-  try{const r=await fetch(BASE+'/crypto-trading-control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode,trading_enabled:false})});const j=await r.json();if(!j.ok){alert(j.error||'Could not change mode.');return;}renderDeltaTradingControl(j.state);}catch(e){alert('Could not reach trading control.');}
-}
-async function enableDeltaLive(){
-  const ok=confirm('LIVE mode can send real-money Delta orders. Enable LIVE trading only after you have verified the complete execution path. Continue?');
-  if(!ok)return;
-  const ok2=confirm('FINAL CONFIRMATION: You understand this can place real orders and lose real money. Enable LIVE trading?');
-  if(!ok2)return;
-  try{const r=await fetch(BASE+'/crypto-trading-control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'live',trading_enabled:true,emergency_stop:false})});const j=await r.json();if(!j.ok){alert(j.error||'Could not enable LIVE mode.');return;}renderDeltaTradingControl(j.state);}catch(e){alert('Could not reach trading control.');}
-}
-async function toggleDeltaEmergency(){
-  try{const cur=await fetch(BASE+'/crypto-trading-control').then(r=>r.json());const next=!cur?.state?.emergency_stop;const r=await fetch(BASE+'/crypto-trading-control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:cur?.state?.mode||'paper',trading_enabled:false,emergency_stop:next})});const j=await r.json();if(!j.ok){alert(j.error||'Could not change emergency stop.');return;}renderDeltaTradingControl(j.state);}catch(e){alert('Could not reach trading control.');}
-}
-async function testDeltaExecution(side){
-  const out=document.getElementById('deltaExecResult'); out.textContent='Testing execution path...';
-  const symbol=(document.getElementById('deltaExecSymbol').value||'').trim().toUpperCase(); const qty=Number(document.getElementById('deltaExecQty').value||0);
-  const creds=await getDeltaCredentials(); if(!creds){out.innerHTML='<span class="bad">Save Delta credentials first.</span>';return;}
-  try{const r=await fetch(BASE+'/delta-execution',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'execute',api_key:creds.api_key,api_secret:creds.api_secret,symbol,side,qty,order_type:'market_order'})});const j=await r.json();out.innerHTML=j.ok?'<span class="good">'+(j.message||('Execution test accepted in '+(j.mode||'PAPER')+' mode.'))+'</span>':'<span class="bad">'+(j.error||'Execution test failed.')+'</span>';}catch(e){out.innerHTML='<span class="bad">Could not reach execution service.</span>'; }
-}
-
 async function loadDeltaProducts(){
   const st=document.getElementById('cryptoUniverseStatus'); try{const r=await fetch(BASE+'/delta-products');const j=await r.json();deltaProducts=j.products||[]; populateBacktestSymbols(); if(!deltaProducts.length){st.textContent='Delta market catalogue is empty  -  tap Scan Now after the catalogue sync is available.';return;} st.textContent=deltaProducts.length+' live perpetual markets available from Delta Exchange India.'; buildSymGrid(stratData?.symbols||[]); applyCryptoUniverse();}catch(e){st.textContent='Could not load Delta market catalogue.';}
 }
@@ -1426,6 +1373,5 @@ function showBtDetail(sym){
 }
 
 checkAuth(); loadSettings(); loadMargins(); loadPositions(); loadOrders(); updateFormLabels(); setMode('budget'); setUniverse('large'); setStyle('pullback');
-loadCryptoSettings(); loadDeltaCredentialState(); loadDeltaConnectionState(); loadDeltaTradingControl(); loadDeltaProducts(); loadCryptoOrders(); loadStrategyConfig(); setBtDays(30); loadKiteCredentialState(); finishKiteCallback(); checkAuth();
-window.addEventListener('load',()=>{startPaperEnginePolling();});
+loadCryptoSettings(); loadDeltaCredentialState(); loadDeltaConnectionState(); loadDeltaProducts(); loadCryptoOrders(); loadStrategyConfig(); setBtDays(30); loadKiteCredentialState(); finishKiteCallback(); checkAuth();
 </script></body></html>
