@@ -540,10 +540,10 @@ async function runTradePilotOptimizer(){
   const status=document.getElementById('optStatus'); const out=document.getElementById('optResults'); const symbol=(document.getElementById('optSymbol')?.value||'ALL').toUpperCase();
   status.textContent='Running optimizer...'; out.innerHTML='';
   try{
-    let r=await fetch(BASE+'/crypto-strategy-optimizer?symbol='+encodeURIComponent(symbol),{method:'POST',cache:'no-store'});
-    if(!r.ok){r=await fetch(BASE+'/crypto-strategy-optimizer?symbol='+encodeURIComponent(symbol),{cache:'no-store'});}
+    let r=await fetch(BASE+'/crypto-strategy-optimizer?symbol='+encodeURIComponent(symbol),{method:'GET',cache:'no-store'});
+    if(!r.ok && r.status===405){r=await fetch(BASE+'/crypto-strategy-optimizer?symbol='+encodeURIComponent(symbol),{method:'POST',cache:'no-store'});}
     const text=await r.text(); let j; try{j=JSON.parse(text);}catch(e){throw new Error('Optimizer returned a non-JSON response ('+r.status+').');}
-    if(!r.ok||!j.ok) throw new Error(j.error||('Optimizer request failed ('+r.status+').'));
+    if(!r.ok||!j.ok) throw new Error(j.error||('Optimizer request failed ('+r.status+'). Check the Supabase optimizer service and CORS response.'));
     status.innerHTML='<span class="good">Optimizer completed in '+fmtNum(j.elapsed_ms||0)+' ms. Combinations tested: '+fmtNum(j.combinations_tested||0)+'.</span>';
     const best=j.best_result||{};
     let html='<div class="card"><h4 style="margin-top:0">Best Result</h4>';
@@ -1328,7 +1328,9 @@ function setBtDays(d){
   ['7','30','60','90'].forEach(x => document.getElementById('btDays'+x).classList.toggle('active', Number(x)===d));
 }
 function svgLine(values, opts){
+  values = Array.isArray(values) ? values.map(Number).filter(Number.isFinite) : [];
   const w = opts.w||600, h = opts.h||140, pad = 6;
+  if(values.length < 2) return '<div class=\"small\">Not enough equity data to draw chart.</div>';
   const min = Math.min(...values), max = Math.max(...values);
   const range = (max-min) || 1;
   const pts = values.map((v,i) => {
