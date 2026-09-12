@@ -171,9 +171,9 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="topbar">
 <div class="wrap" style="padding-top:0">
 <div class="loginbanner" id="loginBanner">
-  <div style="font-weight:800;font-size:15px">WARNING Not logged in to Zerodha today</div>
-  <div class="small" style="margin-top:6px">Zerodha requires a fresh login every trading day (~6am IST reset).</div>
-  <button class="btn" style="margin-top:10px" onclick="location.href=BASE+'/kite-login'">Login with Zerodha</button>
+  <div style="font-weight:800;font-size:15px">WARNING Zerodha is not connected for today</div>
+  <div class="small" style="margin-top:6px">Kite requires a fresh manual login each trading day. Your API secret stays encrypted on this device.</div>
+  <button class="btn" style="margin-top:10px" onclick="connectZerodha()">Connect Zerodha</button>
 </div>
 </div>
 <div class="brand"><b>TradePilot</b>
@@ -296,9 +296,17 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div><label>Max open positions</label><input id="stMaxPos" type="number" placeholder="4"></div></div>
 <label>Max single order (% of capital)</label><input id="stMaxOrder" type="number" step="1" placeholder="20">
 <button class="btn btn2" style="margin-top:10px" onclick="saveSettings()">Save</button><div id="settingsResult" class="small"></div></div>
-<div class="card"><h3 style="margin-top:0">Session</h3>
-<div class="small">Tap Logout, then Login with Zerodha again if Margins/Positions show errors.</div>
-<button class="btn2 btn" style="margin-top:10px" onclick="doLogout()">Logout</button></div>
+<div class="card"><h3 style="margin-top:0">Zerodha Kite - Connection Center</h3>
+<div class="small">Your Kite API Key and API Secret are encrypted locally in this browser. The secret is sent only during the token exchange and is not stored in Supabase.</div>
+<label>Kite API Key</label><input id="kiteApiKey" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Paste your Kite Connect API Key">
+<label>Kite API Secret</label><input id="kiteApiSecret" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" placeholder="Paste your Kite Connect API Secret">
+<div class="row2"><button class="btn btn2" onclick="toggleKiteSecret()">Show / Hide Secret</button><button class="btn btn2" onclick="saveKiteCredentials()">Save Credentials</button></div>
+<div class="row2" style="margin-top:8px"><button class="btn" onclick="connectZerodha()">Login with Zerodha</button><button class="btn btn2" onclick="refreshKiteAccount()">Refresh Account</button></div>
+<div class="row2" style="margin-top:8px"><button class="btn4" style="width:100%;margin-left:0" onclick="clearKiteCredentials()">Clear Saved Kite Credentials</button></div>
+<div id="kiteCredentialStatus" class="small" style="margin-top:8px">No Kite credentials saved in this browser.</div>
+<div id="kiteConnectionStatus" class="small" style="margin-top:8px">Enter and save your Kite credentials, then login with Zerodha.</div>
+<div class="explainbox" style="margin-top:10px"><b>Important:</b> Zerodha requires a manual login/authorization each trading day. TradePilot never asks for or stores your Zerodha password or TOTP.</div>
+<button class="btn2 btn" style="margin-top:10px" onclick="doLogout()">Disconnect / Logout</button></div>
 <div class="card small">Live orders route through a static-IP proxy, automatically as AMO outside market hours or regular intraday during market hours. Note: brokerage, STT, and other charges apply to every real trade and can eat a large share of small profits  -  factor that in, especially on small position sizes.</div>
 </div>
 </div>
@@ -450,6 +458,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 const BASE = "https://qsborukxsupytozkatlk.supabase.co/functions/v1";
 const DELTA_CRED_DB = "TradePilotLocalSecrets";
 const DELTA_CRED_STORE = "credentials";
+const KITE_CRED_KEY = "kite";
 let mySettings = { capital: 100000, max_risk_per_trade_pct: 0.5 };
 let sizingMode = 'budget'; let universe = 'large'; let entryStyle = 'pullback';
 let editingId = null; let lastOrders = []; let tvWidgetLoaded = false; let currentTicket = null;
@@ -532,43 +541,129 @@ async function saveSettings(){
     if(j.data){ mySettings = j.data; settingsResult.innerHTML='<span class="good">Saved.</span>'; } else { settingsResult.innerHTML='<span class="bad">Could not save.</span>'; }
   }catch(e){ settingsResult.innerHTML='<span class="bad">Could not reach backend.</span>'; }
 }
-async function doLogout(){ try{ await fetch(BASE+'/kite-logout', {method:'POST'}); }catch(e){} checkAuth(); alert('Logged out. Tap "Login with Zerodha" to sign in again.'); }
-async function checkAuth(){
-  try{ const r = await fetch(BASE+'/kite-portfolio?view=margins'); const loggedIn = r.ok;
-    authStatus.textContent = loggedIn ? 'Logged in OK' : 'Not logged in'; authStatus.className = loggedIn ? 'small good' : 'small bad';
-    loginBanner.classList.toggle('ok', loggedIn); logoutBtn.style.display = loggedIn ? 'inline-block' : 'none';
-  }catch(e){ authStatus.textContent='Could not reach backend.'; }
+async function doLogout(){
+  await clearKiteSessionOnly();
+  checkAuth();
+  document.getElementById('kiteConnectionStatus').innerHTML='<span class="small">Disconnected from this browser. Tap Login with Zerodha to connect again.</span>';
 }
 function isAuthError(status){ return status===401 || status===403; }
 
+function openKiteCredDb(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DELTA_CRED_DB,1);
+    req.onupgradeneeded=()=>{ if(!req.result.objectStoreNames.contains(DELTA_CRED_STORE)) req.result.createObjectStore(DELTA_CRED_STORE); };
+    req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
+  });
+}
+async function getKiteCredentials(){
+  try{
+    const db=await openKiteCredDb();
+    const rec=await new Promise((resolve,reject)=>{const r=db.transaction(DELTA_CRED_STORE,'readonly').objectStore(DELTA_CRED_STORE).get(KITE_CRED_KEY);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+    if(!rec)return null;
+    const aes=await getLocalDeltaKey();
+    const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64ToBuf(rec.iv)},aes,b64ToBuf(rec.data));
+    return JSON.parse(new TextDecoder().decode(plain));
+  }catch(e){return null;}
+}
+async function saveKiteCredentials(){
+  const apiKey=(document.getElementById('kiteApiKey').value||'').trim();
+  const apiSecret=(document.getElementById('kiteApiSecret').value||'').trim();
+  const st=document.getElementById('kiteCredentialStatus');
+  if(!apiKey||!apiSecret){st.innerHTML='<span class="bad">Enter both Kite API Key and API Secret.</span>';return false;}
+  try{
+    const aes=await getLocalDeltaKey(); const iv=crypto.getRandomValues(new Uint8Array(12));
+    const existing=await getKiteCredentials();
+    const payload={api_key:apiKey,api_secret:apiSecret,access_token:existing?.access_token||'',user_id:existing?.user_id||''};
+    const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},aes,new TextEncoder().encode(JSON.stringify(payload)));
+    const db=await openKiteCredDb(); const tx=db.transaction(DELTA_CRED_STORE,'readwrite');
+    tx.objectStore(DELTA_CRED_STORE).put({iv:bufToB64(iv),data:bufToB64(cipher)},KITE_CRED_KEY);
+    tx.oncomplete=()=>{st.innerHTML='<span class="good">Kite credentials saved securely on this device.</span>';document.getElementById('kiteApiSecret').value='';};
+    tx.onerror=()=>{st.innerHTML='<span class="bad">Could not save Kite credentials on this device.</span>';};
+    return true;
+  }catch(e){st.innerHTML='<span class="bad">Secure local storage is unavailable in this browser.</span>';return false;}
+}
+async function setKiteSession(accessToken,userId){
+  const c=await getKiteCredentials(); if(!c)return false;
+  const aes=await getLocalDeltaKey(); const iv=crypto.getRandomValues(new Uint8Array(12));
+  const payload={...c,access_token:accessToken||'',user_id:userId||c.user_id||''};
+  const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},aes,new TextEncoder().encode(JSON.stringify(payload)));
+  const db=await openKiteCredDb(); const tx=db.transaction(DELTA_CRED_STORE,'readwrite');
+  tx.objectStore(DELTA_CRED_STORE).put({iv:bufToB64(iv),data:bufToB64(cipher)},KITE_CRED_KEY);
+  return new Promise(resolve=>{tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false);});
+}
+async function clearKiteSessionOnly(){
+  const c=await getKiteCredentials(); if(!c)return;
+  const aes=await getLocalDeltaKey(); const iv=crypto.getRandomValues(new Uint8Array(12));
+  const payload={api_key:c.api_key,api_secret:c.api_secret,access_token:'',user_id:''};
+  const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},aes,new TextEncoder().encode(JSON.stringify(payload)));
+  const db=await openKiteCredDb(); const tx=db.transaction(DELTA_CRED_STORE,'readwrite');tx.objectStore(DELTA_CRED_STORE).put({iv:bufToB64(iv),data:bufToB64(cipher)},KITE_CRED_KEY);
+}
+async function clearKiteCredentials(){
+  try{const db=await openKiteCredDb();const tx=db.transaction(DELTA_CRED_STORE,'readwrite');tx.objectStore(DELTA_CRED_STORE).delete(KITE_CRED_KEY);tx.oncomplete=()=>{document.getElementById('kiteCredentialStatus').innerHTML='<span class="small">Saved Kite credentials cleared from this browser.</span>';document.getElementById('kiteApiKey').value='';document.getElementById('kiteApiSecret').value='';document.getElementById('kiteConnectionStatus').textContent='No Kite credentials saved.';checkAuth();};}catch(e){}
+}
+function toggleKiteSecret(){const el=document.getElementById('kiteApiSecret');el.type=el.type==='password'?'text':'password';}
+async function loadKiteCredentialState(){
+  const st=document.getElementById('kiteCredentialStatus'); const c=await getKiteCredentials();
+  st.innerHTML=c?'<span class="good">Encrypted Kite credentials are saved on this device.</span>':'<span class="small">No Kite credentials saved in this browser.</span>';
+  if(c) document.getElementById('kiteApiKey').value=c.api_key||'';
+}
+async function kitePrivate(action, extra={}){
+  const c=await getKiteCredentials();
+  if(!c || !c.api_key){return {ok:false,status:400,error:'No Kite API credentials saved in this dashboard.'};}
+  try{
+    const body={action,api_key:c.api_key,api_secret:c.api_secret||'',access_token:c.access_token||'',...extra};
+    const r=await fetch(BASE+'/kite-connection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await r.json(); j.status=r.status; return j;
+  }catch(e){return {ok:false,status:0,error:'Could not reach Kite connection service.'};}
+}
+async function connectZerodha(){
+  const c=await getKiteCredentials();
+  if(!c){document.getElementById('kiteConnectionStatus').innerHTML='<span class="bad">Save your Kite API Key and Secret first.</span>';showTab('settings');return;}
+  const loginUrl='https://kite.zerodha.com/connect/login?v=3&api_key='+encodeURIComponent(c.api_key)+'&redirect_params='+encodeURIComponent('tradepilot=1');
+  document.getElementById('kiteConnectionStatus').innerHTML='<span class="small">Opening Zerodha login. Complete login and authorize TradePilot; you will return here automatically.</span>';
+  window.location.href=loginUrl;
+}
+async function finishKiteCallback(){
+  const params=new URLSearchParams(window.location.search); const requestToken=params.get('kite_request_token');
+  if(!requestToken)return;
+  history.replaceState({},document.title,window.location.pathname);
+  const status=document.getElementById('kiteConnectionStatus'); status.textContent='Completing Zerodha connection...';
+  const j=await kitePrivate('exchange',{request_token:requestToken});
+  if(!j.ok || !j.access_token){status.innerHTML='<span class="bad">Zerodha connection failed: '+(j.error||'Could not exchange request token.')+'</span>';return;}
+  await setKiteSession(j.access_token,j.user_id||'');
+  status.innerHTML='<span class="good">Connected to Zerodha for today.</span>';
+  checkAuth(); refreshKiteAccount();
+}
+async function checkAuth(){
+  try{
+    const c=await getKiteCredentials();
+    const j=c?.access_token ? await kitePrivate('profile') : {ok:false};
+    const loggedIn=!!(j.ok && j.data);
+    authStatus.textContent=loggedIn?'Zerodha connected':'Zerodha not connected'; authStatus.className=loggedIn?'small good':'small bad';
+    loginBanner.classList.toggle('ok',loggedIn); logoutBtn.style.display=loggedIn?'inline-block':'none';
+    const ks=document.getElementById('kiteConnectionStatus'); if(ks && loggedIn) ks.innerHTML='<span class="good">Connected to Zerodha for today.</span>';
+    if(j.status===401 || j.status===403){await clearKiteSessionOnly();}
+  }catch(e){authStatus.textContent='Could not reach Kite backend.';}
+}
 async function loadMargins(){
-  margins.textContent='Loading...';
-  const r = await fetch(BASE+'/kite-portfolio?view=margins'); const j = await r.json();
-  if(isAuthError(r.status)){ margins.innerHTML='<span class="bad">Not logged in  -  tap Logout then log in again.</span>'; checkAuth(); return; }
-  if(!j.data){ margins.innerHTML='<span class="bad">'+(j.message||'Error')+'</span>'; return; }
-  const eq = j.data.equity;
-  margins.innerHTML = '<div class="grid"><div><div class="k">Available</div><div class="v">INR '+Math.round(eq.available.live_balance).toLocaleString('en-IN')+'</div></div><div><div class="k">Used</div><div class="v">INR '+Math.round(eq.utilised.debits).toLocaleString('en-IN')+'</div></div></div>';
+  margins.textContent='Loading...'; const j=await kitePrivate('margins');
+  if(j.status===401||j.status===403){margins.innerHTML='<span class="bad">Zerodha session expired. Tap Connect Zerodha.</span>';await clearKiteSessionOnly();checkAuth();return;}
+  if(!j.ok || !j.data){margins.innerHTML='<span class="bad">'+(j.error||j.message||'Error')+'</span>';return;}
+  const eq=j.data.equity||{}; margins.innerHTML='<div class="grid"><div><div class="k">Available</div><div class="v">INR '+Math.round(Number(eq.available?.live_balance||0)).toLocaleString('en-IN')+'</div></div><div><div class="k">Used</div><div class="v">INR '+Math.round(Number(eq.utilised?.debits||0)).toLocaleString('en-IN')+'</div></div></div>';
 }
 async function loadPositions(){
-  positions.textContent='Loading...';
-  const r = await fetch(BASE+'/kite-portfolio?view=positions'); const j = await r.json();
-  if(isAuthError(r.status)){ positions.innerHTML='<span class="bad">Not logged in.</span>'; checkAuth(); return; }
-  const net = (j.data && j.data.net) ? j.data.net.filter(p=>p.quantity!==0) : [];
-  if(!net.length){ positions.innerHTML='No open positions.'; return; }
-  let html='<table><tr><th>Symbol</th><th>Qty</th><th>P&L</th></tr>';
-  for(const p of net){ html += '<tr><td>'+p.tradingsymbol+'</td><td>'+p.quantity+'</td><td class="'+(p.pnl>=0?'good':'bad')+'">INR '+p.pnl.toFixed(0)+'</td></tr>'; }
-  positions.innerHTML = html+'</table>';
+  positions.textContent='Loading...'; const j=await kitePrivate('positions');
+  if(j.status===401||j.status===403){positions.innerHTML='<span class="bad">Zerodha session expired.</span>';await clearKiteSessionOnly();checkAuth();return;}
+  const net=(j.data?.net||[]).filter(p=>p.quantity!==0); if(!net.length){positions.innerHTML='No open positions.';return;}
+  let html='<table><tr><th>Symbol</th><th>Qty</th><th>P&amp;L</th></tr>'; for(const p of net){html+='<tr><td>'+p.tradingsymbol+'</td><td>'+p.quantity+'</td><td class="'+(p.pnl>=0?'good':'bad')+'">INR '+Number(p.pnl||0).toFixed(0)+'</td></tr>';} positions.innerHTML=html+'</table>';
 }
 async function loadHoldings(){
-  holdings.textContent='Loading...';
-  const r = await fetch(BASE+'/kite-portfolio?view=holdings'); const j = await r.json();
-  if(isAuthError(r.status)){ holdings.innerHTML='<span class="bad">Not logged in.</span>'; checkAuth(); return; }
-  const h = j.data || [];
-  if(!h.length){ holdings.innerHTML='No holdings.'; return; }
-  let html='<table><tr><th>Symbol</th><th>Qty</th><th>P&L</th></tr>';
-  for(const p of h){ html += '<tr><td>'+p.tradingsymbol+'</td><td>'+p.quantity+'</td><td class="'+(p.pnl>=0?'good':'bad')+'">INR '+p.pnl.toFixed(0)+'</td></tr>'; }
-  holdings.innerHTML = html+'</table>';
+  holdings.textContent='Loading...'; const j=await kitePrivate('holdings');
+  if(j.status===401||j.status===403){holdings.innerHTML='<span class="bad">Zerodha session expired.</span>';await clearKiteSessionOnly();checkAuth();return;}
+  const h=j.data||[]; if(!h.length){holdings.innerHTML='No holdings.';return;}
+  let html='<table><tr><th>Symbol</th><th>Qty</th><th>P&amp;L</th></tr>'; for(const p of h){html+='<tr><td>'+p.tradingsymbol+'</td><td>'+p.quantity+'</td><td class="'+(p.pnl>=0?'good':'bad')+'">INR '+Number(p.pnl||0).toFixed(0)+'</td></tr>';} holdings.innerHTML=html+'</table>';
 }
+async function refreshKiteAccount(){checkAuth();loadMargins();loadPositions();loadHoldings();}
 
 async function loadOrders(){
   orders.textContent='Loading...';
@@ -799,7 +894,9 @@ async function placeRealOrder(){
   const resEl = document.getElementById('liveOrderResult');
   resEl.innerHTML = '<div class="small">Placing live order...</div>';
   try{
-    const body = { exchange:'NSE', symbol: cleanSym, side: sideLabel, qty: qty, price: x.entry, order_type:'LIMIT', product:'MIS', stop_loss: x.sl };
+    const kc = await getKiteCredentials();
+    if(!kc || !kc.access_token){ resEl.innerHTML = '<div class="liveresult err">Zerodha is not connected for today. Tap Connect Zerodha first.</div>'; return; }
+    const body = { exchange:'NSE', symbol: cleanSym, side: sideLabel, qty: qty, price: x.entry, order_type:'LIMIT', product:'MIS', stop_loss: x.sl, api_key:kc.api_key, access_token:kc.access_token };
     const r = await fetch(BASE+'/kite-place-order', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
     const j = await r.json();
     if(r.ok){
@@ -1246,5 +1343,5 @@ function showBtDetail(sym){
 }
 
 checkAuth(); loadSettings(); loadMargins(); loadPositions(); loadOrders(); updateFormLabels(); setMode('budget'); setUniverse('large'); setStyle('pullback');
-loadCryptoSettings(); loadDeltaCredentialState(); loadDeltaConnectionState(); loadDeltaProducts(); loadCryptoOrders(); loadStrategyConfig(); setBtDays(30);
+loadCryptoSettings(); loadDeltaCredentialState(); loadDeltaConnectionState(); loadDeltaProducts(); loadCryptoOrders(); loadStrategyConfig(); setBtDays(30); loadKiteCredentialState(); finishKiteCallback(); checkAuth();
 </script></body></html>
