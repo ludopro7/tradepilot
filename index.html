@@ -184,7 +184,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 </div>
 <div class="appswitch">
 <button id="appBtn-stocks" class="active stocks" onclick="setApp('stocks')"> Stocks</button>
-<button id="appBtn-crypto" onclick="setApp('crypto')">Crypto  Crypto Futures</button>
+<button id="appBtn-crypto" onclick="setApp('crypto')">Crypto Futures</button>
 </div>
 </div>
 
@@ -526,20 +526,23 @@ async function ccControl(body){const el=document.getElementById('ccActionStatus'
 
 async function loadOptimizerSymbols(){
   const sel=document.getElementById('optSymbol'); if(!sel) return;
+  sel.innerHTML='<option value="ALL">ALL (top 20 by volume)</option>';
   try{
-    const r=await fetch(BASE+'/delta-products'); const j=await r.json();
-    const products=j.products||[];
-    const symbols=products.map(x=>x.symbol).filter(Boolean).slice(0,20);
-    sel.innerHTML='<option value="ALL">ALL (top 20 by volume)</option>'+symbols.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
-  }catch(e){}
+    const r=await fetch(BASE+'/crypto-strategy-optimizer?action=symbols',{cache:'no-store'});
+    const text=await r.text(); let j={}; try{j=JSON.parse(text)}catch(e){}
+    const symbols=Array.isArray(j.symbols)?j.symbols:(Array.isArray(j.products)?j.products.map(x=>x.symbol):[]);
+    if(symbols.length) sel.innerHTML='<option value="ALL">ALL (top 20 by volume)</option>'+symbols.filter(Boolean).slice(0,20).map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+  }catch(e){
+    // Keep ALL available; the optimizer itself can read the live market catalogue server-side.
+  }
 }
 async function runTradePilotOptimizer(){
   const status=document.getElementById('optStatus'); const out=document.getElementById('optResults'); const symbol=(document.getElementById('optSymbol')?.value||'ALL').toUpperCase();
   status.textContent='Running optimizer...'; out.innerHTML='';
   try{
-    let r=await fetch(BASE+'/crypto-strategy-optimizer?symbol='+encodeURIComponent(symbol),{method:'POST'});
-    if(!r.ok){r=await fetch(BASE+'/crypto-strategy-optimizer?symbol='+encodeURIComponent(symbol));}
-    const text=await r.text(); let j; try{j=JSON.parse(text);}catch(e){throw new Error('Optimizer returned a non-JSON response.');}
+    let r=await fetch(BASE+'/crypto-strategy-optimizer?symbol='+encodeURIComponent(symbol),{method:'POST',cache:'no-store'});
+    if(!r.ok){r=await fetch(BASE+'/crypto-strategy-optimizer?symbol='+encodeURIComponent(symbol),{cache:'no-store'});}
+    const text=await r.text(); let j; try{j=JSON.parse(text);}catch(e){throw new Error('Optimizer returned a non-JSON response ('+r.status+').');}
     if(!r.ok||!j.ok) throw new Error(j.error||('Optimizer request failed ('+r.status+').'));
     status.innerHTML='<span class="good">Optimizer completed in '+fmtNum(j.elapsed_ms||0)+' ms. Combinations tested: '+fmtNum(j.combinations_tested||0)+'.</span>';
     const best=j.best_result||{};
@@ -1341,16 +1344,23 @@ async function runBacktest(){
   const sym = btSymbol.value;
   const capital = parseFloat(btCapital.value||'10000');
   const risk = Math.min(parseFloat(btRisk.value||'2'), 2);
-  btStatus.innerHTML = '<div class="small">Running backtest on '+sym+' over '+btDays+' days... this can take a little while.</div>';
+  btStatus.innerHTML = '<div class="small">Running backtest on '+esc(sym)+' over '+btDays+' days... this can take a little while.</div>';
   btResults.innerHTML = '';
   try{
-    const q = new URLSearchParams({ symbol: sym, days: btDays, capital, riskPct: risk });
-    const r = await fetch(BASE+'/crypto-backtest?'+q.toString()); const j = await r.json();
-    if(!j.success){ btStatus.innerHTML = '<div class="errbox">'+(j.error||'Backtest failed')+'</div>'; return; }
-    btStatus.innerHTML = '<div class="small good">Done  -  '+j.results.length+' symbol(s) tested  |  risk applied: '+j.riskControl.appliedRiskPct+'% (hard max '+j.riskControl.hardMaximumPct+'%)</div>';
+    const q = new URLSearchParams({ symbol: sym, days: btDays, capital: String(capital), riskPct: String(risk) });
+    let r = await fetch(BASE+'/crypto-backtest?'+q.toString(),{method:'GET',cache:'no-store'});
+    let text = await r.text();
+    let j; try{j=JSON.parse(text)}catch(e){throw new Error('Backtest returned a non-JSON response ('+r.status+').')}
+    if(!r.ok || !j.success){
+      throw new Error(j.error || ('Backtest failed ('+r.status+').'));
+    }
+    if(!Array.isArray(j.results)) throw new Error('Backtest returned no result set.');
+    btStatus.innerHTML = '<div class="small good">Done - '+j.results.length+' symbol(s) tested | risk applied: '+j.riskControl.appliedRiskPct+'% (hard max '+j.riskControl.hardMaximumPct+'%)</div>';
     btResultsData = j;
-    if(sym==='ALL'){ renderBacktestComparison(j.results); } else { renderBacktestSingle(j.results[0]); }
-  }catch(e){ btStatus.innerHTML = '<div class="errbox">Could not reach backend.</div>'; }
+    if(sym==='ALL'){ renderBacktestComparison(j.results); } else if(j.results[0]) { renderBacktestSingle(j.results[0]); }
+  }catch(e){
+    btStatus.innerHTML = '<div class="errbox">Backtest failed: '+esc(e.message||'Unknown error')+'</div>';
+  }
 }
 function metricGrid(m){
   return '<div class="grid">'+
