@@ -326,6 +326,8 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="hero" id="cScanState" style="margin-top:8px">Not scanned yet</div>
 <div class="small" id="cScanDetail"></div>
 <button class="btn" style="margin-top:10px" onclick="runCryptoScan()">Scan Now</button>
+<div class="row2" style="margin-top:8px"><button class="btn btn2" onclick="runPaperEngine()">Run Paper Engine</button><div id="paperEngineStatus" class="small">Paper engine: ready</div></div>
+<div class="small" style="margin-top:6px">Simulation only: valid signals can open paper positions automatically; the engine closes them at stop/target and records P&amp;L. Real Delta orders remain OFF.</div>
 <div id="cScanResults" style="margin-top:12px"></div></div>
 <div class="card" id="cTicketCard" style="display:none"><h3 style="margin-top:0">Trade Plan</h3><div id="cTicketBody"></div></div>
 </div>
@@ -963,6 +965,24 @@ async function loadCryptoPortfolio(){
     cPositions.innerHTML = html || 'No open positions.';
   }catch(e){ cBalances.innerHTML = '<span class="bad">Connect Delta Exchange India in Settings first.</span>'; }
 }
+async function runPaperEngine(){
+  const el=document.getElementById('paperEngineStatus');
+  if(el) el.innerHTML='<span class="small">Checking signals and paper positions...</span>';
+  try{
+    const r=await fetch(BASE+'/crypto-paper-engine',{cache:'no-store'}); const j=await r.json();
+    if(!r.ok||!j.ok){ if(el) el.innerHTML='<span class="bad">Paper engine error: '+(j.error||'unknown error')+'</span>'; return j; }
+    const opened=j.opened||[], closed=j.closed||[];
+    if(el) el.innerHTML='<span class="good">Paper engine OK â open '+(j.activePositions||0)+' | opened '+opened.length+' | closed '+closed.length+' | daily P&amp;L '+Number(j.dailyPnl||0).toFixed(2)+'</span>'+(j.halted?' <span class="bad">HALTED</span>':'');
+    loadCryptoOrders();
+    return j;
+  }catch(e){ if(el) el.innerHTML='<span class="bad">Could not reach paper engine.</span>'; return {ok:false,error:String(e)}; }
+}
+let paperEngineTimer=null;
+function startPaperEnginePolling(){
+  if(paperEngineTimer) return;
+  runPaperEngine();
+  paperEngineTimer=setInterval(runPaperEngine,30000);
+}
 async function runCryptoScan(){
   cScanState.textContent = 'Scanning...'; cScanResults.innerHTML = ''; cTicketCard.style.display = 'none';
   try{
@@ -1393,4 +1413,5 @@ function showBtDetail(sym){
 
 checkAuth(); loadSettings(); loadMargins(); loadPositions(); loadOrders(); updateFormLabels(); setMode('budget'); setUniverse('large'); setStyle('pullback');
 loadCryptoSettings(); loadDeltaCredentialState(); loadDeltaConnectionState(); loadDeltaTradingControl(); loadDeltaProducts(); loadCryptoOrders(); loadStrategyConfig(); setBtDays(30); loadKiteCredentialState(); finishKiteCallback(); checkAuth();
+window.addEventListener('load',()=>{startPaperEnginePolling();});
 </script></body></html>
