@@ -425,7 +425,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div><div class="k">Total logged</div><div class="v" id="cPerfCount">0</div></div>
 <div><div class="k">Closed</div><div class="v" id="cPerfClosed">0</div></div>
 <div><div class="k">Win rate</div><div class="v" id="cPerfWinRate"> - </div></div>
-<div><div class="k">Total P&L</div><div class="v" id="cPerfTotal">0</div></div></div></div>
+<div><div class="k">Total P&L</div><div class="v" id="cPerfTotal">0</div></div></div><div id="cPerfAdvanced" style="margin-top:12px"></div></div>
 <div class="card"><h3 style="margin-top:0">Your Trade Log</h3><div id="cOrders" class="small">Tap refresh to load.</div><button class="btn btn2" onclick="loadCryptoOrders()">Refresh</button></div>
 </div>
 <div class="tabpanel" id="cTab-settings">
@@ -1056,11 +1056,18 @@ async function loadCryptoOrders(){
   cOrders = j.data || []; renderCryptoPerformance(); renderCryptoOrdersTable();
 }
 function renderCryptoPerformance(){
-  cPerfCount.textContent = cOrders.length; const closed = cOrders.filter(o => o.status==='closed'); cPerfClosed.textContent = closed.length;
-  if(!closed.length){ cPerfWinRate.textContent = ' - '; cPerfTotal.textContent = '0'; cPerfTotal.className='v'; return; }
-  const wins = closed.filter(o => Number(o.pnl) > 0).length; const total = closed.reduce((s,o) => s + Number(o.pnl||0), 0);
-  cPerfWinRate.textContent = Math.round((wins/closed.length)*100) + '%'; cPerfTotal.textContent = total.toFixed(2); cPerfTotal.className = 'v ' + (total>=0?'good':'bad');
+  cPerfCount.textContent=cOrders.length; const closed=cOrders.filter(o=>o.status==='closed'); cPerfClosed.textContent=closed.length;
+  const total=closed.reduce((s,o)=>s+Number(o.pnl||0),0); const adv=document.getElementById('cPerfAdvanced');
+  if(!closed.length){cPerfWinRate.textContent=' - ';cPerfTotal.textContent='0';cPerfTotal.className='v';if(adv)adv.innerHTML='<div class="small">No closed paper trades yet. Run the Paper Engine to build performance history.</div>';return;}
+  const wins=closed.filter(o=>Number(o.pnl)>0).length; cPerfWinRate.textContent=Math.round(wins/closed.length*100)+'%'; cPerfTotal.textContent=total.toFixed(2); cPerfTotal.className='v '+(total>=0?'good':'bad');
+  const ordered=[...closed].sort((a,b)=>new Date(a.closed_at||a.created_at)-new Date(b.closed_at||b.created_at)); const capital=Number(cryptoSettings?.capital||10000); let eq=capital,peak=capital,maxDD=0,gp=0,gl=0; const curve=[capital];
+  ordered.forEach(o=>{const p=Number(o.pnl||0);eq+=p;curve.push(eq);if(p>0)gp+=p;else gl+=Math.abs(p);peak=Math.max(peak,eq);maxDD=Math.max(maxDD,peak?100*(peak-eq)/peak:0);});
+  const pf=gl?gp/gl:(gp?Infinity:0),avg=total/closed.length,best=Math.max(...closed.map(o=>Number(o.pnl||0))),worst=Math.min(...closed.map(o=>Number(o.pnl||0)));
+  if(adv)adv.innerHTML='<div class="sectionhead">Paper Equity Curve</div><div class="chartbox">'+cryptoEquitySvg(curve,capital)+'</div><div class="grid" style="margin-top:10px">'+
+  '<div><div class="k">Paper Equity</div><div class="v '+(eq>=capital?'good':'bad')+'">'+eq.toFixed(2)+'</div></div>'+ '<div><div class="k">ROI</div><div class="v '+(total>=0?'good':'bad')+'">'+(capital?100*total/capital:0).toFixed(2)+'%</div></div>'+ '<div><div class="k">Profit Factor</div><div class="v">'+(Number.isFinite(pf)?pf.toFixed(2):'â')+'</div></div>'+ '<div><div class="k">Avg Trade</div><div class="v '+(avg>=0?'good':'bad')+'">'+avg.toFixed(2)+'</div></div>'+ '<div><div class="k">Best Trade</div><div class="v good">'+best.toFixed(2)+'</div></div>'+ '<div><div class="k">Worst Trade</div><div class="v bad">'+worst.toFixed(2)+'</div></div>'+ '<div><div class="k">Max Drawdown</div><div class="v bad">'+maxDD.toFixed(2)+'%</div></div>'+ '<div><div class="k">Open Paper</div><div class="v">'+cOrders.filter(o=>o.status!=='closed').length+'</div></div></div>';
 }
+function cryptoEquitySvg(values,base){if(!values||values.length<2)return '';const W=760,H=190,P=12,min=Math.min(...values),max=Math.max(...values),span=(max-min)||1;const pts=values.map((v,i)=>{const x=P+i/(values.length-1)*(W-2*P),y=H-P-(v-min)/span*(H-2*P);return x.toFixed(1)+','+y.toFixed(1)}).join(' ');const y0=H-P-(base-min)/span*(H-2*P);return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="190" aria-label="Paper equity curve"><line x1="'+P+'" y1="'+y0.toFixed(1)+'" x2="'+(W-P)+'" y2="'+y0.toFixed(1)+'" stroke="currentColor" opacity=".22" stroke-dasharray="4 4"/><polyline points="'+pts+'" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><text x="'+P+'" y="16" fill="currentColor" opacity=".65" font-size="11">Start '+Number(base).toFixed(0)+'</text><text x="'+(W-P-100)+'" y="16" fill="currentColor" opacity=".65" font-size="11">Now '+Number(values.at(-1)).toFixed(2)+'</text></svg>';}
+
 function renderCryptoOrdersTable(){
   const el = document.getElementById('cOrders');
   if(!cOrders.length){ el.innerHTML = 'No trades logged yet.'; return; }
