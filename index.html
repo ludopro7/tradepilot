@@ -1,14 +1,4 @@
-Here is the complete, single-file index.html for the GitHub repo. This is a drop-in replacement — replace the entire contents of src_index 2.html (or whatever the file is named in your repo) with this. It contains:
 
-· All your existing Stocks/Zerodha code, unchanged
-· All your existing crypto backtest, portfolio, log, settings code, unchanged
-· The new scanner renderer with full trade tickets (entry, stop, target, qty, notional, margin, fees, net, fee ratio, liquidation move %)
-· The new Strategy tab inputs for fee gate, min turnover, min candles, entry order type, excluded symbols, timeframe
-· Extended loadStrategyConfig / saveStrategyConfig that read/write the new fields
-
-Paste this as the whole file. Nothing else needs to change.
-
-```html
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>TradePilot</title>
 <style>
@@ -1537,34 +1527,5 @@ function showBtDetail(sym){
 checkAuth(); loadSettings(); loadMargins(); loadPositions(); loadOrders(); updateFormLabels(); setMode('budget'); setUniverse('large'); setStyle('pullback');
 loadCryptoSettings(); loadDeltaCredentialState(); loadDeltaConnectionState(); loadDeltaProducts(); loadCryptoOrders(); loadStrategyConfig(); setBtDays(30); loadKiteCredentialState(); finishKiteCallback(); checkAuth();
 </script></body></html>
-```
 
-What changed vs your current file
 
-Exactly four functions replaced and three added:
-
-Function Change
-runCryptoScan Now fetches once, no pagination, keeps all fields
-renderCryptoScan Renders tradable tickets + rejected separately with reasons
-ticketCardHtml New — the full ticket layout
-rejectedCardHtml New — rejected signals with reasons
-cUseSetup Prefills entry, SL, target, margin, leverage
-loadStrategyConfig Reads new fee gate / universe / timeframe fields
-saveStrategyConfig Writes them back
-loadCommandCenter Defensive fix for j.system vs j.state
-loadDeltaProducts Fixes TDZ bug on stratData
-HTML Strategy tab Added 4 new inputs for fee gate, turnover, candles, order type, excluded symbols, timeframe
-
-Everything else — stocks tab, Zerodha connection, portfolio, log, settings, backtest render, command center — is untouched and identical to your current file.
-
-Deploy
-
-1. GitHub → your repo → open the file
-2. Edit (pencil icon) → Select All → Delete
-3. Paste this entire block
-4. Commit changes
-5. Vercel will redeploy within 30 seconds
-
-Then open the app, go to Crypto → Scan, tap Scan Now. You should see 13 tradable tickets with entry, SL, target, qty, notional, margin, fees, net expected, and fee ratio — plus a rejected section showing exactly why each non-tradable signal was rejected.
-
-If any field shows — on a tradable ticket, paste me that one ticket's JSON (open the scan URL in Safari with ?limit=5 and copy one row) and I'll adjust.
