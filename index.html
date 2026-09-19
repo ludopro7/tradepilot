@@ -321,6 +321,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <button id="cTabBtn-settings" onclick="showCryptoTab('settings')">Settings</button></div>
 <div class="tabpanel active" id="cTab-command">
 <div class="card"><h3 style="margin-top:0">TradePilot Command Center</h3><div class="small">Unified Delta futures control and decision view. Live trading remains OFF unless explicitly armed and enabled.</div><div id="ccStatus" class="hero" style="margin-top:8px">Loading...</div><div id="ccSummary" class="row2" style="margin-top:10px"></div><div id="ccSignals" style="margin-top:12px"></div><div id="ccPositions" style="margin-top:12px"></div><div id="ccTrades" style="margin-top:12px"></div><div class="row2" style="margin-top:12px"><button class="btn" onclick="loadCommandCenter()">Refresh Command Center</button><button class="btn btn2" onclick="ccEmergencyStop()">Emergency Stop</button><button class="btn btn2" onclick="ccClearEmergencyStop()">Clear Stop</button></div><button class="btn" style="margin-top:8px;background:#173a2b;color:#8ff0b0" onclick="runPaperEngineNow()">Run Paper Engine Now</button><div class="small" id="ccActionStatus" style="margin-top:8px"></div><div id="ccPaperRunResult" style="margin-top:8px"></div></div>
+<div class="card"><h3 style="margin-top:0">Quick Symbol Focus</h3><div class="small">Type a symbol to see its live trade plan right now (entry / stop / target / qty), using your saved strategy settings. Optionally scope the bot to trade only that symbol from this point on.</div><input id="qsSymbol" placeholder="e.g. BTCUSD" style="margin-top:8px" onkeydown="if(event.key==='Enter')quickSymbolAnalyze()"><button class="btn" style="margin-top:8px" onclick="quickSymbolAnalyze()">Analyze &amp; Show Trade Plan</button><div id="qsResult" style="margin-top:10px"></div></div>
 </div>
 
 <div class="tabpanel" id="cTab-scan">
@@ -529,6 +530,83 @@ async function runPaperEngineNow(){
     resEl.innerHTML=html;
     loadCommandCenter();
   }catch(e){ resEl.innerHTML='<div class="errbox">Could not reach paper engine.</div>'; }
+}
+
+/* ---- Quick Symbol Focus (live analysis + single-symbol paper focus) ---- */
+function qsEma(a,n){const o=Array(a.length).fill(NaN);if(a.length<n)return o;let e=a.slice(0,n).reduce((x,y)=>x+y,0)/n;o[n-1]=e;const k=2/(n+1);for(let i=n;i<a.length;i++){e=a[i]*k+e*(1-k);o[i]=e}return o}
+function qsRsi(a,n){const o=Array(a.length).fill(NaN);if(a.length<=n)return o;let g=0,l=0;for(let i=1;i<=n;i++){const d=a[i]-a[i-1];g+=Math.max(d,0);l+=Math.max(-d,0)}g/=n;l/=n;o[n]=l?100-100/(1+g/l):100;for(let i=n+1;i<a.length;i++){const d=a[i]-a[i-1];g=(g*(n-1)+Math.max(d,0))/n;l=(l*(n-1)+Math.max(-d,0))/n;o[i]=l?100-100/(1+g/l):100}return o}
+function qsAtr(c,n){const o=Array(c.length).fill(NaN),tr=Array(c.length).fill(0);for(let i=1;i<c.length;i++)tr[i]=Math.max(c[i].high-c[i].low,Math.abs(c[i].high-c[i-1].close),Math.abs(c[i].low-c[i-1].close));if(c.length<=n)return o;let s=0;for(let i=1;i<=n;i++)s+=tr[i];o[n]=s/n;for(let i=n+1;i<c.length;i++)o[i]=(o[i-1]*(n-1)+tr[i])/n;return o}
+function qsAdx(c,n=14){const o=Array(c.length).fill(NaN);if(c.length<n*2+2)return o;const tr=Array(c.length).fill(0),p=Array(c.length).fill(0),m=Array(c.length).fill(0);for(let i=1;i<c.length;i++){const up=c[i].high-c[i-1].high,dn=c[i-1].low-c[i].low;p[i]=up>dn&&up>0?up:0;m[i]=dn>up&&dn>0?dn:0;tr[i]=Math.max(c[i].high-c[i].low,Math.abs(c[i].high-c[i-1].close),Math.abs(c[i].low-c[i-1].close))}let ts=0,ps=0,ms=0;for(let i=1;i<=n;i++){ts+=tr[i];ps+=p[i];ms+=m[i]}const dx=Array(c.length).fill(NaN);for(let i=n;i<c.length;i++){if(i>n){ts-=ts/n;ts+=tr[i];ps-=ps/n;ps+=p[i];ms-=ms/n;ms+=m[i]}const pi=ts?100*ps/ts:0,mi=ts?100*ms/ts:0;dx[i]=pi+mi?100*Math.abs(pi-mi)/(pi+mi):0}let s=0;for(let i=n;i<n*2;i++)s+=dx[i]||0;o[n*2-1]=s/n;for(let i=n*2;i<c.length;i++)o[i]=(o[i-1]*(n-1)+(dx[i]||0))/n;return o}
+function qsMacd(a){const f=qsEma(a,12),s=qsEma(a,26),line=a.map((_,i)=>f[i]-s[i]),sig=qsEma(line,9);return line.map((x,i)=>x-sig[i])}
+function qsVol(c,n=20){const o=Array(c.length).fill(NaN);for(let i=n;i<c.length;i++){let s=0;for(let j=i-n;j<i;j++)s+=c[j].volume;o[i]=s?c[i].volume/(s/n):0}return o}
+function qsBreak(c,n){const hi=Array(c.length).fill(NaN),lo=Array(c.length).fill(NaN);for(let i=n;i<c.length;i++){let h=-Infinity,l=Infinity;for(let j=i-n;j<i;j++){h=Math.max(h,c[j].high);l=Math.min(l,c[j].low)}hi[i]=h;lo[i]=l}return{hi,lo}}
+async function quickSymbolAnalyze(){
+  const sym=(document.getElementById('qsSymbol').value||'').trim().toUpperCase();
+  const resEl=document.getElementById('qsResult');
+  if(!sym){ resEl.innerHTML='<div class="small">Enter a symbol first.</div>'; return; }
+  resEl.innerHTML='<div class="small">Analyzing '+sym+'...</div>';
+  try{
+    if(!deltaProducts.length) await loadDeltaProducts();
+    const prod=deltaProducts.find(p=>p.symbol===sym);
+    if(!prod){ resEl.innerHTML='<div class="errbox">'+sym+' not found in the live Delta market catalogue  -  check the symbol spelling.</div>'; return; }
+    if(!stratData || !execData){ resEl.innerHTML='<div class="errbox">Strategy config not loaded yet  -  try again in a moment.</div>'; return; }
+    const endT=Math.floor(Date.now()/1000), startT=endT-5*86400;
+    const r=await fetch('https://api.india.delta.exchange/v2/history/candles?resolution=5m&symbol='+encodeURIComponent(sym)+'&start='+startT+'&end='+endT);
+    if(!r.ok) throw new Error('Could not fetch live candles (HTTP '+r.status+').');
+    const j=await r.json();
+    const candles=(j.result||[]).map(x=>({time:+x.time,open:+x.open,high:+x.high,low:+x.low,close:+x.close,volume:+(x.volume||0)})).sort((a,b)=>a.time-b.time);
+    if(candles.length<120){ resEl.innerHTML='<div class="errbox">Not enough recent candle history for '+sym+' yet.</div>'; return; }
+    const p=stratData.parameters||{}, e2=execData||{};
+    const pp={ema_fast:Number(p.ema_fast)||20, ema_slow:Number(p.ema_slow)||50, rsi_period:Number(p.rsi_period)||14,
+      rsi_long_min:Number(p.rsi_long_min)||50, rsi_long_max:Number(p.rsi_long_max)||75, rsi_short_min:Number(p.rsi_short_min)||25, rsi_short_max:Number(p.rsi_short_max)||50,
+      atr_period:Number(p.atr_period)||14, stop_atr_multiplier:Number(p.stop_atr_multiplier)||1, reward_risk:Number(p.reward_risk)||2,
+      breakout_bars:Number(p.breakout_bars)||12, volume_multiplier:Number(p.volume_multiplier)||1.2};
+    const closes=candles.map(x=>x.close);
+    const ef=qsEma(closes,pp.ema_fast), es=qsEma(closes,pp.ema_slow), rs=qsRsi(closes,pp.rsi_period), at=qsAtr(candles,pp.atr_period),
+      ad=qsAdx(candles), mc=qsMacd(closes), vr=qsVol(candles), bo=qsBreak(candles,pp.breakout_bars);
+    const i=candles.length-1;
+    const vals=[ef[i],es[i],rs[i],at[i],ad[i],mc[i],vr[i],bo.hi[i],bo.lo[i]];
+    if(!vals.every(Number.isFinite)){ resEl.innerHTML='<div class="warnbox">Indicators for '+sym+' are not ready yet (thin recent data)  -  try again shortly.</div>'; return; }
+    const long=ef[i]>es[i];
+    const mo=long?mc[i]>0:mc[i]<0;
+    const ro=long?(rs[i]>=pp.rsi_long_min&&rs[i]<=pp.rsi_long_max):(rs[i]>=pp.rsi_short_min&&rs[i]<=pp.rsi_short_max);
+    const vo=vr[i]>=pp.volume_multiplier;
+    const br=long?candles[i].close>bo.hi[i]:candles[i].close<bo.lo[i];
+    const minAdx=Number(e2.min_adx)||20, minScore=Number(e2.min_signal_score)||7;
+    let score=2; if(ro)score+=2; if(mo)score+=2; if(ad[i]>=minAdx)score++; if(vo)score++; if(br)score+=2;
+    const tradable=score>=minScore && ad[i]>=minAdx && (!e2.require_macd_confirmation||mo) && (!e2.require_volume_confirmation||vo) && (!e2.require_breakout_confirmation||br) && (long?e2.allow_long!==false:e2.allow_short!==false);
+    const entry=candles[i].close;
+    const dist=at[i]*pp.stop_atr_multiplier;
+    const stop=long?entry-dist:entry+dist;
+    const target=long?entry+dist*pp.reward_risk:entry-dist*pp.reward_risk;
+    const cv=Math.max(1,Number(prod.contract_value)||1), lot=Math.max(1,Number(prod.lot_size)||1), minOrder=Math.max(0,Number(prod.minimum_order_size)||0);
+    const capital=Number(cryptoSettings.capital)||10000;
+    const riskAmt=capital*Math.min(Number(e2.max_risk_per_trade_pct)||2,2)/100, maxNotional=capital*(Number(e2.max_notional_pct)||20)/100, maxMargin=capital*(Number(e2.max_margin_pct)||4)/100;
+    let qty=Math.min(dist?riskAmt/(dist*cv):0, maxNotional/(entry*cv), (maxMargin*(Number(e2.default_leverage)||5))/(entry*cv));
+    qty=Math.floor(qty/lot)*lot; if(qty<minOrder)qty=0;
+    let html='<div class="notice">'+sym+'  -  '+(long?'LONG bias':'SHORT bias')+', score '+score+'/9'+(tradable?'  -  tradable now':'  -  not tradable yet')+'.</div>';
+    html+='<div class="grid" style="margin-top:8px">'+
+      '<div><div class="k">Side</div><div class="v">'+(long?'LONG':'SHORT')+'</div></div>'+
+      '<div><div class="k">Limit Entry</div><div class="v">'+entry.toFixed(4)+'</div></div>'+
+      '<div><div class="k">Stop Loss</div><div class="v bad">'+stop.toFixed(4)+'</div></div>'+
+      '<div><div class="k">Target</div><div class="v good">'+target.toFixed(4)+'</div></div>'+
+      '<div><div class="k">Qty (contracts)</div><div class="v">'+qty.toFixed(4)+'</div></div>'+
+      '<div><div class="k">ADX</div><div class="v">'+ad[i].toFixed(1)+'</div></div></div>';
+    if(!tradable){ html+='<div class="warnbox">Doesn\'t clear your saved thresholds yet  -  shown anyway so you can see where it stands.</div>'; }
+    if(qty<=0){ html+='<div class="errbox">Computed quantity rounds to zero at your current capital/risk settings  -  this size can\'t actually be traded.</div>'; }
+    html+='<button class="btn" style="margin-top:10px;background:#173a2b;color:#8ff0b0" onclick=\'startSymbolFocus("'+sym+'")\'>Start Paper Test on '+sym+' Only</button>';
+    resEl.innerHTML=html;
+  }catch(e){ resEl.innerHTML='<div class="errbox">Could not analyze '+sym+'  -  '+(e.message||'unknown error')+'.</div>'; }
+}
+async function startSymbolFocus(sym){
+  const resEl=document.getElementById('qsResult');
+  try{
+    const body={enabled:true, universe:'manual', symbols:[sym], timeframe: stratData?stratData.timeframe:'5m', parameters: stratData.parameters, execution: execData};
+    const r=await fetch(BASE+'/crypto-strategy-config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    const j=await r.json();
+    if(r.ok){ resEl.innerHTML+='<div class="notice" style="margin-top:8px">Bot is now focused on '+sym+' only  -  the paper engine will only ever act on this symbol until you change it back in the Strategy tab.</div>'; loadStrategyConfig(); }
+    else{ resEl.innerHTML+='<div class="errbox" style="margin-top:8px">'+(j.error||'Could not update strategy focus.')+'</div>'; }
+  }catch(e){ resEl.innerHTML+='<div class="errbox" style="margin-top:8px">Could not reach backend.</div>'; }
 }
 
 function showCryptoTab(name){
