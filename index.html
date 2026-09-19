@@ -322,7 +322,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="tabpanel active" id="cTab-command">
 <div class="card"><h3 style="margin-top:0">TradePilot Command Center</h3><div class="small">Unified Delta futures control and decision view. Live trading remains OFF unless explicitly armed and enabled.</div><div id="ccStatus" class="hero" style="margin-top:8px">Loading...</div><div id="ccSummary" class="row2" style="margin-top:10px"></div><div id="ccSignals" style="margin-top:12px"></div><div id="ccPositions" style="margin-top:12px"></div><div id="ccTrades" style="margin-top:12px"></div><div class="row2" style="margin-top:12px"><button class="btn" onclick="loadCommandCenter()">Refresh Command Center</button><button class="btn btn2" onclick="ccEmergencyStop()">Emergency Stop</button><button class="btn btn2" onclick="ccClearEmergencyStop()">Clear Stop</button></div><button class="btn" style="margin-top:8px;background:#173a2b;color:#8ff0b0" onclick="runPaperEngineNow()">Run Paper Engine Now</button><div class="small" id="ccActionStatus" style="margin-top:8px"></div><div id="ccPaperRunResult" style="margin-top:8px"></div></div>
 <div class="card"><h3 style="margin-top:0">Quick Symbol Focus</h3><div class="small">Type a symbol to see its live trade plan right now (entry / stop / target / qty), using your saved strategy settings. Optionally scope the bot to trade only that symbol from this point on.</div><input id="qsSymbol" placeholder="e.g. BTCUSD" style="margin-top:8px" onkeydown="if(event.key==='Enter')quickSymbolAnalyze()"><button class="btn" style="margin-top:8px" onclick="quickSymbolAnalyze()">Analyze &amp; Show Trade Plan</button><div id="qsResult" style="margin-top:10px"></div></div>
-<div class="card"><h3 style="margin-top:0">Best Symbols To Trade</h3><div class="small">One button does the whole check: backtests your Top 25 symbols over 30d and 60d, keeps only the ones that were consistently profitable in both, then checks which of those are actually tradable right now. Takes a minute or two.</div><button class="btn" style="margin-top:8px;background:#173a2b;color:#8ff0b0" onclick="findBestSymbols()">Find My Best Symbols</button><div id="bsStatus" class="small" style="margin-top:8px"></div><div id="bsResult" style="margin-top:8px"></div></div>
+<div class="card"><h3 style="margin-top:0">Best Symbols To Trade</h3><div class="small">Backtests your Top 25 symbols over 30d and 60d, keeps the ones consistently profitable in both, then ranks them by setup frequency  -  built for active manual scalping, so you can watch a real shortlist yourself rather than trade blind. Takes a minute or two.</div><button class="btn" style="margin-top:8px;background:#173a2b;color:#8ff0b0" onclick="findBestSymbols()">Find My Best Symbols</button><div id="bsStatus" class="small" style="margin-top:8px"></div><div id="bsResult" style="margin-top:8px"></div></div>
 </div>
 
 <div class="tabpanel" id="cTab-scan">
@@ -664,25 +664,33 @@ async function findBestSymbols(){
       const m30 = r30 && r30.success && r30.results && r30.results[0] && r30.results[0].success ? r30.results[0].metrics : null;
       const m60 = r60 && r60.success && r60.results && r60.results[0] && r60.results[0].success ? r60.results[0].metrics : null;
       if(!m30 || !m60) continue;
-      if(m30.netPnl>=0 && m60.netPnl>=0 && m30.tradeCount>=10 && m60.tradeCount>=10) survivors.push({symbol:sym, m30, m60});
+      if(m30.netPnl>=0 && m60.netPnl>=0 && m30.tradeCount>=10 && m60.tradeCount>=10){
+        const tradesPerDay = m60.tradeCount/60;
+        const avgWinRate = (m30.winRatePct+m60.winRatePct)/2;
+        const avgPF = (m30.profitFactor+m60.profitFactor)/2;
+        survivors.push({symbol:sym, m30, m60, tradesPerDay, avgWinRate, avgPF});
+      }
     }catch(e){ /* skip this symbol on error, keep going */ }
   }
   if(!survivors.length){ statusEl.innerHTML=''; resEl.innerHTML='<div class="warnbox">None of your Top 25 symbols were consistently profitable across both 30d and 60d right now. Nothing to recommend today  -  that\'s a real, useful answer, not an error.</div>'; return; }
+  survivors.sort((a,b)=> b.tradesPerDay - a.tradesPerDay);
   statusEl.innerHTML='<div class="small">'+survivors.length+' symbol(s) passed the 30d+60d check. Checking which are tradable right now...</div>';
-  const tradableNow=[], notTradableNow=[];
   for(const s of survivors){
-    try{ const res=await computeLiveTradePlan(s.symbol); if(res.ok && res.tradable && res.qty>0) tradableNow.push({...s, plan:res}); else notTradableNow.push(s); }
-    catch(e){ notTradableNow.push(s); }
+    try{ const res=await computeLiveTradePlan(s.symbol); s.tradableNow = !!(res.ok && res.tradable && res.qty>0); s.plan = res.ok?res:null; }
+    catch(e){ s.tradableNow=false; s.plan=null; }
   }
   statusEl.innerHTML='';
-  let html='';
-  if(tradableNow.length){
-    html+='<div class="bestbox"><b>Trade these now:</b><br>'+tradableNow.map(s=>s.symbol+' ('+(s.plan.long?'LONG':'SHORT')+')').join(', ')+'</div>';
-    html+='<button class="btn" style="margin-top:10px;background:#173a2b;color:#8ff0b0" onclick=\'startSymbolsFocus('+JSON.stringify(tradableNow.map(s=>s.symbol))+',"bsResult")\'>Focus Bot on This List</button>';
-  } else {
-    html+='<div class="warnbox">'+survivors.length+' symbol(s) backtested well, but none are tradable under your current thresholds right now. Check back later  -  conditions change through the day.</div>';
-  }
-  if(notTradableNow.length){ html+='<div class="small" style="margin-top:8px">Backtested well but not tradable this moment: '+notTradableNow.map(s=>s.symbol).join(', ')+'</div>'; }
+  let html='<div class="small" style="margin-bottom:8px">Ranked by setup frequency (trades/day over 60d) since that matters most for active scalping  -  not just raw profitability. Use this as a shortlist to watch, not an instruction.</div>';
+  html+='<div class="tbl-wrap"><table><tr><th>Symbol</th><th>Trades/day</th><th>Avg Win%</th><th>Avg PF</th><th>Tradable now</th></tr>';
+  survivors.forEach(s=>{
+    html+='<tr><td>'+s.symbol+(s.tradableNow?' <span class="small good">('+((s.plan&&s.plan.long)?'LONG':'SHORT')+')</span>':'')+'</td>'+
+      '<td>'+s.tradesPerDay.toFixed(1)+'</td><td>'+s.avgWinRate.toFixed(0)+'%</td><td>'+s.avgPF.toFixed(2)+'</td>'+
+      '<td>'+(s.tradableNow?'<span class="good">yes</span>':'<span class="small">no</span>')+'</td></tr>';
+  });
+  html+='</table></div>';
+  const tradableNow=survivors.filter(s=>s.tradableNow);
+  if(tradableNow.length){ html+='<div class="bestbox" style="margin-top:10px"><b>Tradable right now:</b> '+tradableNow.map(s=>s.symbol).join(', ')+'  -  these are worth actually watching this session.</div>'; }
+  else{ html+='<div class="warnbox" style="margin-top:10px">None of these are tradable under your current thresholds this exact moment  -  keep this list open and check back through the session.</div>'; }
   resEl.innerHTML=html;
 }
 
