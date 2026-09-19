@@ -540,71 +540,88 @@ function qsAdx(c,n=14){const o=Array(c.length).fill(NaN);if(c.length<n*2+2)retur
 function qsMacd(a){const f=qsEma(a,12),s=qsEma(a,26),line=a.map((_,i)=>f[i]-s[i]),sig=qsEma(line,9);return line.map((x,i)=>x-sig[i])}
 function qsVol(c,n=20){const o=Array(c.length).fill(NaN);for(let i=n;i<c.length;i++){let s=0;for(let j=i-n;j<i;j++)s+=c[j].volume;o[i]=s?c[i].volume/(s/n):0}return o}
 function qsBreak(c,n){const hi=Array(c.length).fill(NaN),lo=Array(c.length).fill(NaN);for(let i=n;i<c.length;i++){let h=-Infinity,l=Infinity;for(let j=i-n;j<i;j++){h=Math.max(h,c[j].high);l=Math.min(l,c[j].low)}hi[i]=h;lo[i]=l}return{hi,lo}}
+async function fetchLivePrice(sym){
+  const endT=Math.floor(Date.now()/1000), startT=endT-3*3600;
+  const r=await fetch('https://api.india.delta.exchange/v2/history/candles?resolution=5m&symbol='+encodeURIComponent(sym)+'&start='+startT+'&end='+endT);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  const closes=(j.result||[]).map(x=>+x.close).filter(Number.isFinite);
+  if(!closes.length) throw new Error('no candles');
+  return closes[closes.length-1];
+}
+async function computeLiveTradePlan(sym){
+  if(!deltaProducts.length) await loadDeltaProducts();
+  const prod=deltaProducts.find(p=>p.symbol===sym);
+  if(!prod) return {ok:false, reason:sym+' not found in the live Delta market catalogue  -  check the symbol spelling.'};
+  if(!stratData || !execData) return {ok:false, reason:'Strategy config not loaded yet  -  try again in a moment.'};
+  const endT=Math.floor(Date.now()/1000), startT=endT-5*86400;
+  let r;
+  try{ r=await fetch('https://api.india.delta.exchange/v2/history/candles?resolution=5m&symbol='+encodeURIComponent(sym)+'&start='+startT+'&end='+endT); }
+  catch(e){ return {ok:false, reason:'Could not reach the exchange for live candles.'}; }
+  if(!r.ok) return {ok:false, reason:'Could not fetch live candles (HTTP '+r.status+').'};
+  const j=await r.json();
+  let candles=(j.result||[]).map(x=>({time:+x.time,open:+x.open,high:+x.high,low:+x.low,close:+x.close,volume:+(x.volume||0)})).sort((a,b)=>a.time-b.time);
+  const rawCount=candles.length;
+  candles=candles.filter(c=>[c.open,c.high,c.low,c.close].every(Number.isFinite));
+  if(candles.length<120) return {ok:false, reason:'Not enough clean recent candle history for '+sym+' yet.'};
+  const p=stratData.parameters||{}, e2=execData||{};
+  const pp={ema_fast:Number(p.ema_fast)||20, ema_slow:Number(p.ema_slow)||50, rsi_period:Number(p.rsi_period)||14,
+    rsi_long_min:Number(p.rsi_long_min)||50, rsi_long_max:Number(p.rsi_long_max)||75, rsi_short_min:Number(p.rsi_short_min)||25, rsi_short_max:Number(p.rsi_short_max)||50,
+    atr_period:Number(p.atr_period)||14, stop_atr_multiplier:Number(p.stop_atr_multiplier)||1, reward_risk:Number(p.reward_risk)||2,
+    breakout_bars:Number(p.breakout_bars)||12, volume_multiplier:Number(p.volume_multiplier)||1.2};
+  const closes=candles.map(x=>x.close);
+  const ef=qsEma(closes,pp.ema_fast), es=qsEma(closes,pp.ema_slow), rs=qsRsi(closes,pp.rsi_period), at=qsAtr(candles,pp.atr_period),
+    ad=qsAdx(candles), mc=qsMacd(closes), vr=qsVol(candles), bo=qsBreak(candles,pp.breakout_bars);
+  let i=candles.length-1;
+  const isValid=(idx)=>[ef[idx],es[idx],rs[idx],at[idx],ad[idx],mc[idx],vr[idx],bo.hi[idx],bo.lo[idx]].every(Number.isFinite);
+  const latestIdx=i;
+  while(i>=0 && i>latestIdx-20 && !isValid(i)) i--;
+  if(i<0 || !isValid(i)) return {ok:false, reason:sym+' doesn\'t have enough clean recent data for these indicators yet  -  this can happen on lower-liquidity symbols with gaps in their candle history. Try again later or pick a more actively traded symbol.'};
+  const staleCandles=latestIdx-i;
+  const long=ef[i]>es[i];
+  const mo=long?mc[i]>0:mc[i]<0;
+  const ro=long?(rs[i]>=pp.rsi_long_min&&rs[i]<=pp.rsi_long_max):(rs[i]>=pp.rsi_short_min&&rs[i]<=pp.rsi_short_max);
+  const vo=vr[i]>=pp.volume_multiplier;
+  const br=long?candles[i].close>bo.hi[i]:candles[i].close<bo.lo[i];
+  const minAdx=Number(e2.min_adx)||20, minScore=Number(e2.min_signal_score)||7;
+  let score=2; if(ro)score+=2; if(mo)score+=2; if(ad[i]>=minAdx)score++; if(vo)score++; if(br)score+=2;
+  const tradable=score>=minScore && ad[i]>=minAdx && (!e2.require_macd_confirmation||mo) && (!e2.require_volume_confirmation||vo) && (!e2.require_breakout_confirmation||br) && (long?e2.allow_long!==false:e2.allow_short!==false);
+  const entry=candles[i].close;
+  const dist=at[i]*pp.stop_atr_multiplier;
+  const stop=long?entry-dist:entry+dist;
+  const target=long?entry+dist*pp.reward_risk:entry-dist*pp.reward_risk;
+  const cv=Math.max(1,Number(prod.contract_value)||1), lot=Math.max(1,Number(prod.lot_size)||1), minOrder=Math.max(0,Number(prod.minimum_order_size)||0);
+  const capital=Number(cryptoSettings.capital)||10000;
+  const leverage=Number(e2.default_leverage)||5;
+  const riskAmt=capital*Math.min(Number(e2.max_risk_per_trade_pct)||2,2)/100, maxNotional=capital*(Number(e2.max_notional_pct)||20)/100, maxMargin=capital*(Number(e2.max_margin_pct)||4)/100;
+  let qty=Math.min(dist?riskAmt/(dist*cv):0, maxNotional/(entry*cv), (maxMargin*leverage)/(entry*cv));
+  qty=Math.floor(qty/lot)*lot; if(qty<minOrder)qty=0;
+  const margin=qty>0 ? (qty*entry*cv)/leverage : 0;
+  return {ok:true, symbol:sym, long, score, tradable, entry, stop, target, qty, adx:ad[i], leverage, margin, staleCandles, droppedCandles:rawCount-candles.length};
+}
 async function quickSymbolAnalyze(){
   const sym=(document.getElementById('qsSymbol').value||'').trim().toUpperCase();
   const resEl=document.getElementById('qsResult');
   if(!sym){ resEl.innerHTML='<div class="small">Enter a symbol first.</div>'; return; }
   resEl.innerHTML='<div class="small">Analyzing '+sym+'...</div>';
-  try{
-    if(!deltaProducts.length) await loadDeltaProducts();
-    const prod=deltaProducts.find(p=>p.symbol===sym);
-    if(!prod){ resEl.innerHTML='<div class="errbox">'+sym+' not found in the live Delta market catalogue  -  check the symbol spelling.</div>'; return; }
-    if(!stratData || !execData){ resEl.innerHTML='<div class="errbox">Strategy config not loaded yet  -  try again in a moment.</div>'; return; }
-    const endT=Math.floor(Date.now()/1000), startT=endT-5*86400;
-    const r=await fetch('https://api.india.delta.exchange/v2/history/candles?resolution=5m&symbol='+encodeURIComponent(sym)+'&start='+startT+'&end='+endT);
-    if(!r.ok) throw new Error('Could not fetch live candles (HTTP '+r.status+').');
-    const j=await r.json();
-    let candles=(j.result||[]).map(x=>({time:+x.time,open:+x.open,high:+x.high,low:+x.low,close:+x.close,volume:+(x.volume||0)})).sort((a,b)=>a.time-b.time);
-    const rawCount=candles.length;
-    candles=candles.filter(c=>[c.open,c.high,c.low,c.close].every(Number.isFinite));
-    if(candles.length<rawCount){ /* dropped candles with bad data from the exchange feed; kept the clean ones so one bad tick doesn't poison every reading after it */ }
-    if(candles.length<120){ resEl.innerHTML='<div class="errbox">Not enough clean recent candle history for '+sym+' yet.</div>'; return; }
-    const p=stratData.parameters||{}, e2=execData||{};
-    const pp={ema_fast:Number(p.ema_fast)||20, ema_slow:Number(p.ema_slow)||50, rsi_period:Number(p.rsi_period)||14,
-      rsi_long_min:Number(p.rsi_long_min)||50, rsi_long_max:Number(p.rsi_long_max)||75, rsi_short_min:Number(p.rsi_short_min)||25, rsi_short_max:Number(p.rsi_short_max)||50,
-      atr_period:Number(p.atr_period)||14, stop_atr_multiplier:Number(p.stop_atr_multiplier)||1, reward_risk:Number(p.reward_risk)||2,
-      breakout_bars:Number(p.breakout_bars)||12, volume_multiplier:Number(p.volume_multiplier)||1.2};
-    const closes=candles.map(x=>x.close);
-    const ef=qsEma(closes,pp.ema_fast), es=qsEma(closes,pp.ema_slow), rs=qsRsi(closes,pp.rsi_period), at=qsAtr(candles,pp.atr_period),
-      ad=qsAdx(candles), mc=qsMacd(closes), vr=qsVol(candles), bo=qsBreak(candles,pp.breakout_bars);
-    let i=candles.length-1;
-    const isValid=(idx)=>[ef[idx],es[idx],rs[idx],at[idx],ad[idx],mc[idx],vr[idx],bo.hi[idx],bo.lo[idx]].every(Number.isFinite);
-    const latestIdx=i;
-    while(i>=0 && i>latestIdx-20 && !isValid(i)) i--;
-    if(i<0 || !isValid(i)){ resEl.innerHTML='<div class="warnbox">'+sym+' doesn\'t have enough clean recent data for these indicators yet  -  this can happen on lower-liquidity symbols with gaps in their candle history. Try again later or pick a more actively traded symbol.</div>'; return; }
-    const staleCandles=latestIdx-i;
-    const staleNote=staleCandles>0 ? '<div class="warnbox">Note: '+sym+'\'s most recent candle'+(staleCandles>1?'s had gaps':' had a gap')+' in the data, so this plan uses the latest clean reading  -  about '+(staleCandles*5)+' minutes old, not the live price.</div>' : '';
-    const droppedNote=(rawCount-candles.length)>0 ? '<div class="warnbox">'+(rawCount-candles.length)+' candle(s) from the exchange feed had missing price data and were skipped so they couldn\'t distort this reading.</div>' : '';
-    const long=ef[i]>es[i];
-    const mo=long?mc[i]>0:mc[i]<0;
-    const ro=long?(rs[i]>=pp.rsi_long_min&&rs[i]<=pp.rsi_long_max):(rs[i]>=pp.rsi_short_min&&rs[i]<=pp.rsi_short_max);
-    const vo=vr[i]>=pp.volume_multiplier;
-    const br=long?candles[i].close>bo.hi[i]:candles[i].close<bo.lo[i];
-    const minAdx=Number(e2.min_adx)||20, minScore=Number(e2.min_signal_score)||7;
-    let score=2; if(ro)score+=2; if(mo)score+=2; if(ad[i]>=minAdx)score++; if(vo)score++; if(br)score+=2;
-    const tradable=score>=minScore && ad[i]>=minAdx && (!e2.require_macd_confirmation||mo) && (!e2.require_volume_confirmation||vo) && (!e2.require_breakout_confirmation||br) && (long?e2.allow_long!==false:e2.allow_short!==false);
-    const entry=candles[i].close;
-    const dist=at[i]*pp.stop_atr_multiplier;
-    const stop=long?entry-dist:entry+dist;
-    const target=long?entry+dist*pp.reward_risk:entry-dist*pp.reward_risk;
-    const cv=Math.max(1,Number(prod.contract_value)||1), lot=Math.max(1,Number(prod.lot_size)||1), minOrder=Math.max(0,Number(prod.minimum_order_size)||0);
-    const capital=Number(cryptoSettings.capital)||10000;
-    const riskAmt=capital*Math.min(Number(e2.max_risk_per_trade_pct)||2,2)/100, maxNotional=capital*(Number(e2.max_notional_pct)||20)/100, maxMargin=capital*(Number(e2.max_margin_pct)||4)/100;
-    let qty=Math.min(dist?riskAmt/(dist*cv):0, maxNotional/(entry*cv), (maxMargin*(Number(e2.default_leverage)||5))/(entry*cv));
-    qty=Math.floor(qty/lot)*lot; if(qty<minOrder)qty=0;
-    let html='<div class="notice">'+sym+'  -  '+(long?'LONG bias':'SHORT bias')+', score '+score+'/9'+(tradable?'  -  tradable now':'  -  not tradable yet')+'.</div>'+droppedNote+staleNote;
-    html+='<div class="grid" style="margin-top:8px">'+
-      '<div><div class="k">Side</div><div class="v">'+(long?'LONG':'SHORT')+'</div></div>'+
-      '<div><div class="k">Limit Entry</div><div class="v">'+entry.toFixed(4)+'</div></div>'+
-      '<div><div class="k">Stop Loss</div><div class="v bad">'+stop.toFixed(4)+'</div></div>'+
-      '<div><div class="k">Target</div><div class="v good">'+target.toFixed(4)+'</div></div>'+
-      '<div><div class="k">Qty (contracts)</div><div class="v">'+qty.toFixed(4)+'</div></div>'+
-      '<div><div class="k">ADX</div><div class="v">'+ad[i].toFixed(1)+'</div></div></div>';
-    if(!tradable){ html+='<div class="warnbox">Doesn\'t clear your saved thresholds yet  -  shown anyway so you can see where it stands.</div>'; }
-    if(qty<=0){ html+='<div class="errbox">Computed quantity rounds to zero at your current capital/risk settings  -  this size can\'t actually be traded.</div>'; }
-    html+='<button class="btn" style="margin-top:10px;background:#173a2b;color:#8ff0b0" onclick=\'startSymbolFocus("'+sym+'")\'>Start Paper Test on '+sym+' Only</button>';
-    resEl.innerHTML=html;
-  }catch(e){ resEl.innerHTML='<div class="errbox">Could not analyze '+sym+'  -  '+(e.message||'unknown error')+'.</div>'; }
+  let res;
+  try{ res=await computeLiveTradePlan(sym); }catch(e){ res={ok:false, reason:(e.message||'unknown error')}; }
+  if(!res.ok){ resEl.innerHTML='<div class="errbox">Could not analyze '+sym+'  -  '+res.reason+'</div>'; return; }
+  const staleNote=res.staleCandles>0 ? '<div class="warnbox">Note: '+sym+'\'s most recent candle'+(res.staleCandles>1?'s had gaps':' had a gap')+' in the data, so this plan uses the latest clean reading  -  about '+(res.staleCandles*5)+' minutes old, not the live price.</div>' : '';
+  const droppedNote=res.droppedCandles>0 ? '<div class="warnbox">'+res.droppedCandles+' candle(s) from the exchange feed had missing price data and were skipped so they couldn\'t distort this reading.</div>' : '';
+  let html='<div class="notice">'+sym+'  -  '+(res.long?'LONG bias':'SHORT bias')+', score '+res.score+'/9'+(res.tradable?'  -  tradable now':'  -  not tradable yet')+'.</div>'+droppedNote+staleNote;
+  html+='<div class="grid" style="margin-top:8px">'+
+    '<div><div class="k">Side</div><div class="v">'+(res.long?'LONG':'SHORT')+'</div></div>'+
+    '<div><div class="k">Limit Entry</div><div class="v">'+res.entry.toFixed(4)+'</div></div>'+
+    '<div><div class="k">Stop Loss</div><div class="v bad">'+res.stop.toFixed(4)+'</div></div>'+
+    '<div><div class="k">Target</div><div class="v good">'+res.target.toFixed(4)+'</div></div>'+
+    '<div><div class="k">Qty (contracts)</div><div class="v">'+res.qty.toFixed(4)+'</div></div>'+
+    '<div><div class="k">Margin</div><div class="v">'+res.margin.toFixed(2)+'</div></div>'+
+    '<div><div class="k">ADX</div><div class="v">'+res.adx.toFixed(1)+'</div></div></div>';
+  if(!res.tradable){ html+='<div class="warnbox">Doesn\'t clear your saved thresholds yet  -  shown anyway so you can see where it stands.</div>'; }
+  if(res.qty<=0){ html+='<div class="errbox">Computed quantity rounds to zero at your current capital/risk settings  -  this size can\'t actually be traded.</div>'; }
+  html+='<button class="btn" style="margin-top:10px;background:#173a2b;color:#8ff0b0" onclick=\'startSymbolFocus("'+sym+'")\'>Start Paper Test on '+sym+' Only</button>';
+  resEl.innerHTML=html;
 }
 async function startSymbolFocus(sym){
   const resEl=document.getElementById('qsResult');
@@ -1129,16 +1146,24 @@ function renderCryptoScan(errors, minScoreSeen){
       '<div class="scancard-item"><div class="lbl">Contract Value</div><div class="val">'+x.contractValue+'</div></div>'+
       '<div class="scancard-item"><div class="lbl">MACD confirmed</div><div class="val">'+(x.macdFinite===false?'no data yet':(x.macdFinite?'yes':'no'))+'</div></div>'+
       '<div class="scancard-item"><div class="lbl">Bars used</div><div class="val">'+(x.barCount??' - ')+'</div></div></div>'+
-      '<div class="small" style="margin-top:8px">Entry price, stop loss, target, and P&amp;L estimates are no longer provided by the scanner \u2014 use the Backtest tab or Command Center for full trade detail.</div>'+
-      (x.tradable ? '<button class="btn" style="margin-top:10px" onclick=\'cUseSetup('+JSON.stringify({symbol:x.symbol,side:x.side,qty:x.qty})+')\'>Prefill Log (symbol/side/qty only)</button>' : '')+
+      '<div class="small" style="margin-top:8px">Entry, stop, target and margin aren\'t part of the raw scan  -  tap Prefill Log below to pull a live read for this symbol.</div>'+
+      (x.tradable ? '<button class="btn" style="margin-top:10px" onclick=\'cUseSetup('+JSON.stringify({symbol:x.symbol,side:x.side,qty:x.qty})+')\'>Prefill Log</button>' : '')+
       '</div>';
   });
   cScanResults.innerHTML = html;
 }
-function cUseSetup(x){
+async function cUseSetup(x){
   cSymbol.value = x.symbol; cSide.value = x.side; cQty.value = (x.qty||0).toFixed(4);
   cEntry.value = ''; cSL.value = ''; cTarget.value = ''; cMargin.value = ''; cLeverage.value = '';
   showCryptoTab('log');
+  cOrderResult.innerHTML = '<div class="small">Fetching current entry/stop/target/margin for '+x.symbol+'...</div>';
+  let res;
+  try{ res = await computeLiveTradePlan(x.symbol); }catch(e){ res = {ok:false, reason:(e.message||'unknown error')}; }
+  if(!res.ok){ cOrderResult.innerHTML = '<div class="warnbox">Could not prefill entry/stop/target/margin for '+x.symbol+'  -  '+res.reason+' You can still enter them manually.</div>'; return; }
+  cEntry.value = res.entry.toFixed(4); cSL.value = res.stop.toFixed(4); cTarget.value = res.target.toFixed(4);
+  cMargin.value = res.margin.toFixed(2); cLeverage.value = res.leverage;
+  if(res.qty > 0) cQty.value = res.qty.toFixed(4);
+  cOrderResult.innerHTML = '<div class="notice">Prefilled from a live read just now'+(res.staleCandles>0?' (latest clean candle, ~'+(res.staleCandles*5)+' min old)':'')+'. Review before saving.</div>';
 }
 async function cLogTrade(){
   cOrderResult.innerHTML = cEditingId ? 'Updating...' : 'Saving...';
@@ -1159,7 +1184,7 @@ function cCancelEdit(){
 async function loadCryptoOrders(){
   document.getElementById('cOrders').textContent = 'Loading...';
   const r = await fetch(BASE+'/crypto-trade-log'); const j = await r.json();
-  cOrders = j.data || []; renderCryptoPerformance(); renderCryptoOrdersTable();
+  cOrders = j.data || []; renderCryptoPerformance(); await renderCryptoOrdersTable();
 }
 function renderCryptoPerformance(){
   cPerfCount.textContent = cOrders.length; const closed = cOrders.filter(o => o.status==='closed'); cPerfClosed.textContent = closed.length;
@@ -1167,13 +1192,33 @@ function renderCryptoPerformance(){
   const wins = closed.filter(o => Number(o.pnl) > 0).length; const total = closed.reduce((s,o) => s + Number(o.pnl||0), 0);
   cPerfWinRate.textContent = Math.round((wins/closed.length)*100) + '%'; cPerfTotal.textContent = total.toFixed(2); cPerfTotal.className = 'v ' + (total>=0?'good':'bad');
 }
-function renderCryptoOrdersTable(){
+async function renderCryptoOrdersTable(){
   const el = document.getElementById('cOrders');
   if(!cOrders.length){ el.innerHTML = 'No trades logged yet.'; return; }
+  const openOrders = cOrders.filter(o => o.status!=='closed');
+  const openSymbols = [...new Set(openOrders.map(o => o.symbol))];
+  const priceMap = {};
+  if(openSymbols.length){
+    if(!deltaProducts.length){ try{ await loadDeltaProducts(); }catch(e){} }
+    await Promise.all(openSymbols.map(async sym => { try{ priceMap[sym] = await fetchLivePrice(sym); }catch(e){ priceMap[sym] = null; } }));
+  }
   let html = '<table><tr><th>Date</th><th>Symbol</th><th>Side</th><th>Lev</th><th>Qty</th><th>Status</th><th>P&L</th><th></th></tr>';
   cOrders.forEach(o => {
     const d = new Date(o.created_at); const isClosed = o.status==='closed';
-    const pnlCell = isClosed ? '<span class="'+(o.pnl>=0?'good':'bad')+'">'+Number(o.pnl).toFixed(2)+'</span>' : ' - ';
+    let pnlCell;
+    if(isClosed){
+      pnlCell = '<span class="'+(o.pnl>=0?'good':'bad')+'">'+Number(o.pnl).toFixed(2)+'</span>';
+    } else {
+      const price = priceMap[o.symbol];
+      if(price==null || !o.entry_price){ pnlCell = ' - '; }
+      else{
+        const prod = deltaProducts.find(p => p.symbol===o.symbol);
+        const cv = prod ? Math.max(0.000001, Number(prod.contract_value)||1) : 1;
+        const diff = o.side==='LONG' ? (price - Number(o.entry_price)) : (Number(o.entry_price) - price);
+        const upnl = diff * Number(o.qty||0) * cv;
+        pnlCell = '<span class="'+(upnl>=0?'good':'bad')+'">'+upnl.toFixed(2)+'<span class="small" style="display:block">live</span></span>';
+      }
+    }
     html += '<tr><td>'+d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+'</td><td>'+o.symbol+'</td><td class="'+(o.side==='LONG'?'good':'bad')+'">'+o.side+'</td><td>'+(o.leverage||' - ')+'x</td><td>'+o.qty+'</td>'+
       '<td><span class="statustag '+(isClosed?'closed':'open')+'">'+(isClosed?'Closed':'Open')+'</span></td><td>'+pnlCell+'</td>'+
       '<td>'+(isClosed?'':'<button class="btn5" onclick=\'cCloseTrade('+o.id+')\'>Close</button>')+'<button class="btn3" onclick=\'cEditEntry('+o.id+')\'>Edit</button><button class="btn4" onclick=\'cDeleteEntry('+o.id+')\'>Delete</button></td></tr>';
@@ -1181,8 +1226,18 @@ function renderCryptoOrdersTable(){
   el.innerHTML = html + '</table>';
 }
 async function cCloseTrade(id){
-  const exitStr = prompt('Enter the actual exit price:'); if(exitStr===null) return;
-  const exitPrice = parseFloat(exitStr); if(isNaN(exitPrice) || exitPrice<=0){ alert('Enter a valid price.'); return; }
+  const o = cOrders.find(x => x.id === id);
+  const sym = o ? o.symbol : null;
+  let exitPrice = null;
+  if(sym){ try{ exitPrice = await fetchLivePrice(sym); }catch(e){ exitPrice = null; } }
+  if(exitPrice!=null){
+    const ok = confirm('Close '+(sym||'this trade')+' at the current live price '+exitPrice.toFixed(4)+'?');
+    if(!ok) return;
+  } else {
+    const exitStr = prompt('Could not fetch a live price automatically  -  enter the exit price manually:');
+    if(exitStr===null) return;
+    exitPrice = parseFloat(exitStr); if(isNaN(exitPrice) || exitPrice<=0){ alert('Enter a valid price.'); return; }
+  }
   try{ const r = await fetch(BASE+'/crypto-trade-log', {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id, close:true, exit_price: exitPrice})}); const j = await r.json();
     if(r.ok){ loadCryptoOrders(); } else { alert(j.error||'Could not close.'); } }catch(e){ alert('Could not reach backend.'); }
 }
