@@ -322,6 +322,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="tabpanel active" id="cTab-command">
 <div class="card"><h3 style="margin-top:0">TradePilot Command Center</h3><div class="small">Unified Delta futures control and decision view. Live trading remains OFF unless explicitly armed and enabled.</div><div id="ccStatus" class="hero" style="margin-top:8px">Loading...</div><div id="ccSummary" class="row2" style="margin-top:10px"></div><div id="ccSignals" style="margin-top:12px"></div><div id="ccPositions" style="margin-top:12px"></div><div id="ccTrades" style="margin-top:12px"></div><div class="row2" style="margin-top:12px"><button class="btn" onclick="loadCommandCenter()">Refresh Command Center</button><button class="btn btn2" onclick="ccEmergencyStop()">Emergency Stop</button><button class="btn btn2" onclick="ccClearEmergencyStop()">Clear Stop</button></div><button class="btn" style="margin-top:8px;background:#173a2b;color:#8ff0b0" onclick="runPaperEngineNow()">Run Paper Engine Now</button><div class="small" id="ccActionStatus" style="margin-top:8px"></div><div id="ccPaperRunResult" style="margin-top:8px"></div></div>
 <div class="card"><h3 style="margin-top:0">Quick Symbol Focus</h3><div class="small">Type a symbol to see its live trade plan right now (entry / stop / target / qty), using your saved strategy settings. Optionally scope the bot to trade only that symbol from this point on.</div><input id="qsSymbol" placeholder="e.g. BTCUSD" style="margin-top:8px" onkeydown="if(event.key==='Enter')quickSymbolAnalyze()"><button class="btn" style="margin-top:8px" onclick="quickSymbolAnalyze()">Analyze &amp; Show Trade Plan</button><div id="qsResult" style="margin-top:10px"></div></div>
+<div class="card"><h3 style="margin-top:0">Best Symbols To Trade</h3><div class="small">One button does the whole check: backtests your Top 25 symbols over 30d and 60d, keeps only the ones that were consistently profitable in both, then checks which of those are actually tradable right now. Takes a minute or two.</div><button class="btn" style="margin-top:8px;background:#173a2b;color:#8ff0b0" onclick="findBestSymbols()">Find My Best Symbols</button><div id="bsStatus" class="small" style="margin-top:8px"></div><div id="bsResult" style="margin-top:8px"></div></div>
 </div>
 
 <div class="tabpanel" id="cTab-scan">
@@ -632,6 +633,57 @@ async function startSymbolFocus(sym){
     if(r.ok){ resEl.innerHTML+='<div class="notice" style="margin-top:8px">Bot is now focused on '+sym+' only  -  the paper engine will only ever act on this symbol until you change it back in the Strategy tab.</div>'; loadStrategyConfig(); }
     else{ resEl.innerHTML+='<div class="errbox" style="margin-top:8px">'+(j.error||'Could not update strategy focus.')+'</div>'; }
   }catch(e){ resEl.innerHTML+='<div class="errbox" style="margin-top:8px">Could not reach backend.</div>'; }
+}
+async function startSymbolsFocus(symbolsArr, targetElId){
+  const resEl=document.getElementById(targetElId||'qsResult');
+  try{
+    const body={enabled:true, universe:'manual', symbols:symbolsArr, timeframe: stratData?stratData.timeframe:'5m', parameters: stratData.parameters, execution: execData};
+    const r=await fetch(BASE+'/crypto-strategy-config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    const j=await r.json();
+    if(r.ok){ resEl.innerHTML+='<div class="notice" style="margin-top:8px">Bot is now focused on '+symbolsArr.join(', ')+' only  -  the paper engine will only ever act on these until you change it back in the Strategy tab.</div>'; loadStrategyConfig(); }
+    else{ resEl.innerHTML+='<div class="errbox" style="margin-top:8px">'+(j.error||'Could not update strategy focus.')+'</div>'; }
+  }catch(e){ resEl.innerHTML+='<div class="errbox" style="margin-top:8px">Could not reach backend.</div>'; }
+}
+async function findBestSymbols(){
+  const statusEl=document.getElementById('bsStatus'), resEl=document.getElementById('bsResult');
+  resEl.innerHTML=''; statusEl.innerHTML='<div class="small">Loading market list...</div>';
+  if(!deltaProducts.length){ try{ await loadDeltaProducts(); }catch(e){} }
+  const symbols=deltaProducts.map(p=>p.symbol).filter(Boolean).slice(0,25);
+  if(!symbols.length){ statusEl.innerHTML='<div class="errbox">Market catalogue not loaded yet  -  try again in a moment.</div>'; return; }
+  const capital=Number(cryptoSettings.capital)||10000;
+  const survivors=[];
+  for(let i=0;i<symbols.length;i++){
+    const sym=symbols[i];
+    statusEl.innerHTML='<div class="small">Backtesting '+sym+' ('+(i+1)+'/'+symbols.length+')  -  checking 30d and 60d...</div>';
+    try{
+      const q30=new URLSearchParams({symbol:sym, days:30, capital, riskPct:2}), q60=new URLSearchParams({symbol:sym, days:60, capital, riskPct:2});
+      const [r30,r60]=await Promise.all([
+        fetch(BASE+'/crypto-backtest?'+q30.toString()).then(r=>r.json()).catch(()=>null),
+        fetch(BASE+'/crypto-backtest?'+q60.toString()).then(r=>r.json()).catch(()=>null)
+      ]);
+      const m30 = r30 && r30.success && r30.results && r30.results[0] && r30.results[0].success ? r30.results[0].metrics : null;
+      const m60 = r60 && r60.success && r60.results && r60.results[0] && r60.results[0].success ? r60.results[0].metrics : null;
+      if(!m30 || !m60) continue;
+      if(m30.netPnl>=0 && m60.netPnl>=0 && m30.tradeCount>=10 && m60.tradeCount>=10) survivors.push({symbol:sym, m30, m60});
+    }catch(e){ /* skip this symbol on error, keep going */ }
+  }
+  if(!survivors.length){ statusEl.innerHTML=''; resEl.innerHTML='<div class="warnbox">None of your Top 25 symbols were consistently profitable across both 30d and 60d right now. Nothing to recommend today  -  that\'s a real, useful answer, not an error.</div>'; return; }
+  statusEl.innerHTML='<div class="small">'+survivors.length+' symbol(s) passed the 30d+60d check. Checking which are tradable right now...</div>';
+  const tradableNow=[], notTradableNow=[];
+  for(const s of survivors){
+    try{ const res=await computeLiveTradePlan(s.symbol); if(res.ok && res.tradable && res.qty>0) tradableNow.push({...s, plan:res}); else notTradableNow.push(s); }
+    catch(e){ notTradableNow.push(s); }
+  }
+  statusEl.innerHTML='';
+  let html='';
+  if(tradableNow.length){
+    html+='<div class="bestbox"><b>Trade these now:</b><br>'+tradableNow.map(s=>s.symbol+' ('+(s.plan.long?'LONG':'SHORT')+')').join(', ')+'</div>';
+    html+='<button class="btn" style="margin-top:10px;background:#173a2b;color:#8ff0b0" onclick=\'startSymbolsFocus('+JSON.stringify(tradableNow.map(s=>s.symbol))+',"bsResult")\'>Focus Bot on This List</button>';
+  } else {
+    html+='<div class="warnbox">'+survivors.length+' symbol(s) backtested well, but none are tradable under your current thresholds right now. Check back later  -  conditions change through the day.</div>';
+  }
+  if(notTradableNow.length){ html+='<div class="small" style="margin-top:8px">Backtested well but not tradable this moment: '+notTradableNow.map(s=>s.symbol).join(', ')+'</div>'; }
+  resEl.innerHTML=html;
 }
 
 function showCryptoTab(name){
