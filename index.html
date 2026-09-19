@@ -564,9 +564,13 @@ async function quickSymbolAnalyze(){
     const closes=candles.map(x=>x.close);
     const ef=qsEma(closes,pp.ema_fast), es=qsEma(closes,pp.ema_slow), rs=qsRsi(closes,pp.rsi_period), at=qsAtr(candles,pp.atr_period),
       ad=qsAdx(candles), mc=qsMacd(closes), vr=qsVol(candles), bo=qsBreak(candles,pp.breakout_bars);
-    const i=candles.length-1;
-    const vals=[ef[i],es[i],rs[i],at[i],ad[i],mc[i],vr[i],bo.hi[i],bo.lo[i]];
-    if(!vals.every(Number.isFinite)){ resEl.innerHTML='<div class="warnbox">Indicators for '+sym+' are not ready yet (thin recent data)  -  try again shortly.</div>'; return; }
+    let i=candles.length-1;
+    const isValid=(idx)=>[ef[idx],es[idx],rs[idx],at[idx],ad[idx],mc[idx],vr[idx],bo.hi[idx],bo.lo[idx]].every(Number.isFinite);
+    const latestIdx=i;
+    while(i>=0 && i>latestIdx-20 && !isValid(i)) i--;
+    if(i<0 || !isValid(i)){ resEl.innerHTML='<div class="warnbox">'+sym+' doesn\'t have enough clean recent data for these indicators yet  -  this can happen on lower-liquidity symbols with gaps in their candle history. Try again later or pick a more actively traded symbol.</div>'; return; }
+    const staleCandles=latestIdx-i;
+    const staleNote=staleCandles>0 ? '<div class="warnbox">Note: '+sym+'\'s most recent candle'+(staleCandles>1?'s had gaps':' had a gap')+' in the data, so this plan uses the latest clean reading  -  about '+(staleCandles*5)+' minutes old, not the live price.</div>' : '';
     const long=ef[i]>es[i];
     const mo=long?mc[i]>0:mc[i]<0;
     const ro=long?(rs[i]>=pp.rsi_long_min&&rs[i]<=pp.rsi_long_max):(rs[i]>=pp.rsi_short_min&&rs[i]<=pp.rsi_short_max);
@@ -584,7 +588,7 @@ async function quickSymbolAnalyze(){
     const riskAmt=capital*Math.min(Number(e2.max_risk_per_trade_pct)||2,2)/100, maxNotional=capital*(Number(e2.max_notional_pct)||20)/100, maxMargin=capital*(Number(e2.max_margin_pct)||4)/100;
     let qty=Math.min(dist?riskAmt/(dist*cv):0, maxNotional/(entry*cv), (maxMargin*(Number(e2.default_leverage)||5))/(entry*cv));
     qty=Math.floor(qty/lot)*lot; if(qty<minOrder)qty=0;
-    let html='<div class="notice">'+sym+'  -  '+(long?'LONG bias':'SHORT bias')+', score '+score+'/9'+(tradable?'  -  tradable now':'  -  not tradable yet')+'.</div>';
+    let html='<div class="notice">'+sym+'  -  '+(long?'LONG bias':'SHORT bias')+', score '+score+'/9'+(tradable?'  -  tradable now':'  -  not tradable yet')+'.</div>'+staleNote;
     html+='<div class="grid" style="margin-top:8px">'+
       '<div><div class="k">Side</div><div class="v">'+(long?'LONG':'SHORT')+'</div></div>'+
       '<div><div class="k">Limit Entry</div><div class="v">'+entry.toFixed(4)+'</div></div>'+
