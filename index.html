@@ -533,7 +533,7 @@ async function runPaperEngineNow(){
 }
 
 /* ---- Quick Symbol Focus (live analysis + single-symbol paper focus) ---- */
-function qsEma(a,n){const o=Array(a.length).fill(NaN);if(a.length<n)return o;let e=a.slice(0,n).reduce((x,y)=>x+y,0)/n;o[n-1]=e;const k=2/(n+1);for(let i=n;i<a.length;i++){e=a[i]*k+e*(1-k);o[i]=e}return o}
+function qsEma(a,n){const o=Array(a.length).fill(NaN);let start=-1;for(let s=0;s<=a.length-n;s++){let ok=true;for(let k=0;k<n;k++){if(!Number.isFinite(a[s+k])){ok=false;break;}}if(ok){start=s;break;}}if(start<0)return o;let e=0;for(let k=0;k<n;k++)e+=a[start+k];e/=n;o[start+n-1]=e;const k=2/(n+1);for(let i=start+n;i<a.length;i++){if(!Number.isFinite(a[i])){e=NaN;o[i]=NaN;continue;}if(!Number.isFinite(e)){o[i]=NaN;continue;}e=a[i]*k+e*(1-k);o[i]=e}return o}
 function qsRsi(a,n){const o=Array(a.length).fill(NaN);if(a.length<=n)return o;let g=0,l=0;for(let i=1;i<=n;i++){const d=a[i]-a[i-1];g+=Math.max(d,0);l+=Math.max(-d,0)}g/=n;l/=n;o[n]=l?100-100/(1+g/l):100;for(let i=n+1;i<a.length;i++){const d=a[i]-a[i-1];g=(g*(n-1)+Math.max(d,0))/n;l=(l*(n-1)+Math.max(-d,0))/n;o[i]=l?100-100/(1+g/l):100}return o}
 function qsAtr(c,n){const o=Array(c.length).fill(NaN),tr=Array(c.length).fill(0);for(let i=1;i<c.length;i++)tr[i]=Math.max(c[i].high-c[i].low,Math.abs(c[i].high-c[i-1].close),Math.abs(c[i].low-c[i-1].close));if(c.length<=n)return o;let s=0;for(let i=1;i<=n;i++)s+=tr[i];o[n]=s/n;for(let i=n+1;i<c.length;i++)o[i]=(o[i-1]*(n-1)+tr[i])/n;return o}
 function qsAdx(c,n=14){const o=Array(c.length).fill(NaN);if(c.length<n*2+2)return o;const tr=Array(c.length).fill(0),p=Array(c.length).fill(0),m=Array(c.length).fill(0);for(let i=1;i<c.length;i++){const up=c[i].high-c[i-1].high,dn=c[i-1].low-c[i].low;p[i]=up>dn&&up>0?up:0;m[i]=dn>up&&dn>0?dn:0;tr[i]=Math.max(c[i].high-c[i].low,Math.abs(c[i].high-c[i-1].close),Math.abs(c[i].low-c[i-1].close))}let ts=0,ps=0,ms=0;for(let i=1;i<=n;i++){ts+=tr[i];ps+=p[i];ms+=m[i]}const dx=Array(c.length).fill(NaN);for(let i=n;i<c.length;i++){if(i>n){ts-=ts/n;ts+=tr[i];ps-=ps/n;ps+=p[i];ms-=ms/n;ms+=m[i]}const pi=ts?100*ps/ts:0,mi=ts?100*ms/ts:0;dx[i]=pi+mi?100*Math.abs(pi-mi)/(pi+mi):0}let s=0;for(let i=n;i<n*2;i++)s+=dx[i]||0;o[n*2-1]=s/n;for(let i=n*2;i<c.length;i++)o[i]=(o[i-1]*(n-1)+(dx[i]||0))/n;return o}
@@ -554,8 +554,11 @@ async function quickSymbolAnalyze(){
     const r=await fetch('https://api.india.delta.exchange/v2/history/candles?resolution=5m&symbol='+encodeURIComponent(sym)+'&start='+startT+'&end='+endT);
     if(!r.ok) throw new Error('Could not fetch live candles (HTTP '+r.status+').');
     const j=await r.json();
-    const candles=(j.result||[]).map(x=>({time:+x.time,open:+x.open,high:+x.high,low:+x.low,close:+x.close,volume:+(x.volume||0)})).sort((a,b)=>a.time-b.time);
-    if(candles.length<120){ resEl.innerHTML='<div class="errbox">Not enough recent candle history for '+sym+' yet.</div>'; return; }
+    let candles=(j.result||[]).map(x=>({time:+x.time,open:+x.open,high:+x.high,low:+x.low,close:+x.close,volume:+(x.volume||0)})).sort((a,b)=>a.time-b.time);
+    const rawCount=candles.length;
+    candles=candles.filter(c=>[c.open,c.high,c.low,c.close].every(Number.isFinite));
+    if(candles.length<rawCount){ /* dropped candles with bad data from the exchange feed; kept the clean ones so one bad tick doesn't poison every reading after it */ }
+    if(candles.length<120){ resEl.innerHTML='<div class="errbox">Not enough clean recent candle history for '+sym+' yet.</div>'; return; }
     const p=stratData.parameters||{}, e2=execData||{};
     const pp={ema_fast:Number(p.ema_fast)||20, ema_slow:Number(p.ema_slow)||50, rsi_period:Number(p.rsi_period)||14,
       rsi_long_min:Number(p.rsi_long_min)||50, rsi_long_max:Number(p.rsi_long_max)||75, rsi_short_min:Number(p.rsi_short_min)||25, rsi_short_max:Number(p.rsi_short_max)||50,
@@ -571,6 +574,7 @@ async function quickSymbolAnalyze(){
     if(i<0 || !isValid(i)){ resEl.innerHTML='<div class="warnbox">'+sym+' doesn\'t have enough clean recent data for these indicators yet  -  this can happen on lower-liquidity symbols with gaps in their candle history. Try again later or pick a more actively traded symbol.</div>'; return; }
     const staleCandles=latestIdx-i;
     const staleNote=staleCandles>0 ? '<div class="warnbox">Note: '+sym+'\'s most recent candle'+(staleCandles>1?'s had gaps':' had a gap')+' in the data, so this plan uses the latest clean reading  -  about '+(staleCandles*5)+' minutes old, not the live price.</div>' : '';
+    const droppedNote=(rawCount-candles.length)>0 ? '<div class="warnbox">'+(rawCount-candles.length)+' candle(s) from the exchange feed had missing price data and were skipped so they couldn\'t distort this reading.</div>' : '';
     const long=ef[i]>es[i];
     const mo=long?mc[i]>0:mc[i]<0;
     const ro=long?(rs[i]>=pp.rsi_long_min&&rs[i]<=pp.rsi_long_max):(rs[i]>=pp.rsi_short_min&&rs[i]<=pp.rsi_short_max);
@@ -588,7 +592,7 @@ async function quickSymbolAnalyze(){
     const riskAmt=capital*Math.min(Number(e2.max_risk_per_trade_pct)||2,2)/100, maxNotional=capital*(Number(e2.max_notional_pct)||20)/100, maxMargin=capital*(Number(e2.max_margin_pct)||4)/100;
     let qty=Math.min(dist?riskAmt/(dist*cv):0, maxNotional/(entry*cv), (maxMargin*(Number(e2.default_leverage)||5))/(entry*cv));
     qty=Math.floor(qty/lot)*lot; if(qty<minOrder)qty=0;
-    let html='<div class="notice">'+sym+'  -  '+(long?'LONG bias':'SHORT bias')+', score '+score+'/9'+(tradable?'  -  tradable now':'  -  not tradable yet')+'.</div>'+staleNote;
+    let html='<div class="notice">'+sym+'  -  '+(long?'LONG bias':'SHORT bias')+', score '+score+'/9'+(tradable?'  -  tradable now':'  -  not tradable yet')+'.</div>'+droppedNote+staleNote;
     html+='<div class="grid" style="margin-top:8px">'+
       '<div><div class="k">Side</div><div class="v">'+(long?'LONG':'SHORT')+'</div></div>'+
       '<div><div class="k">Limit Entry</div><div class="v">'+entry.toFixed(4)+'</div></div>'+
