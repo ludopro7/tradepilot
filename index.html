@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>TradePilot</title>
 <style>
@@ -320,9 +319,8 @@ input:checked + .slider:before{transform:translateX(20px)}
 <button id="cTabBtn-portfolio" onclick="showCryptoTab('portfolio')">Portfolio</button>
 <button id="cTabBtn-log" onclick="showCryptoTab('log')">Log &amp; Performance</button>
 <button id="cTabBtn-settings" onclick="showCryptoTab('settings')">Settings</button></div>
-
 <div class="tabpanel active" id="cTab-command">
-<div class="card"><h3 style="margin-top:0">TradePilot Command Center</h3><div class="small">Unified Delta futures control and decision view. Live trading remains OFF unless explicitly armed and enabled.</div><div id="ccStatus" class="hero" style="margin-top:8px">Loading...</div><div id="ccSummary" class="row2" style="margin-top:10px"></div><div id="ccSignals" style="margin-top:12px"></div><div id="ccPositions" style="margin-top:12px"></div><div id="ccTrades" style="margin-top:12px"></div><div class="row2" style="margin-top:12px"><button class="btn" onclick="loadCommandCenter()">Refresh Command Center</button><button class="btn btn2" onclick="ccEmergencyStop()">Emergency Stop</button><button class="btn btn2" onclick="ccClearEmergencyStop()">Clear Stop</button></div><div class="small" id="ccActionStatus" style="margin-top:8px"></div></div>
+<div class="card"><h3 style="margin-top:0">TradePilot Command Center</h3><div class="small">Unified Delta futures control and decision view. Live trading remains OFF unless explicitly armed and enabled.</div><div id="ccStatus" class="hero" style="margin-top:8px">Loading...</div><div id="ccSummary" class="row2" style="margin-top:10px"></div><div id="ccSignals" style="margin-top:12px"></div><div id="ccPositions" style="margin-top:12px"></div><div id="ccTrades" style="margin-top:12px"></div><div class="row2" style="margin-top:12px"><button class="btn" onclick="loadCommandCenter()">Refresh Command Center</button><button class="btn btn2" onclick="ccEmergencyStop()">Emergency Stop</button><button class="btn btn2" onclick="ccClearEmergencyStop()">Clear Stop</button></div><button class="btn" style="margin-top:8px;background:#173a2b;color:#8ff0b0" onclick="runPaperEngineNow()">Run Paper Engine Now</button><div class="small" id="ccActionStatus" style="margin-top:8px"></div><div id="ccPaperRunResult" style="margin-top:8px"></div></div>
 </div>
 
 <div class="tabpanel" id="cTab-scan">
@@ -346,7 +344,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="row2"><div><label>Universe</label><select id="cryptoUniverse" onchange="applyCryptoUniverse()"><option value="all">All live perpetuals</option><option value="top10">Top 10 by turnover</option><option value="top25">Top 25 by turnover</option><option value="top50">Top 50 by turnover</option><option value="manual">Manual selection</option></select></div><div><label>Search markets</label><input id="cryptoSymbolSearch" placeholder="BTC, ETH, SOL..." oninput="filterCryptoSymbols()"></div></div>
 <div class="small" id="cryptoUniverseStatus">Loading Delta Exchange India market catalogue...</div>
 <div class="symgrid" id="symGrid"></div>
-<div class="row2"><div><label>Timeframe</label><select id="cryptoTimeframe"><option value="5m">5m</option><option value="15m">15m</option><option value="30m">30m</option><option value="1h">1h</option><option value="4h">4h</option></select></div><div><label>Excluded symbols (comma)</label><input id="eExcludedSymbols" type="text" placeholder="XAUTUSD,PAXGUSD"></div></div>
 
 <div class="sectionhead">Trend (EMA)</div>
 <div class="row2"><div><label>EMA fast</label><input id="pEmaFast" type="number"></div><div><label>EMA slow</label><input id="pEmaSlow" type="number"></div></div>
@@ -363,7 +360,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="sectionhead">Confirmation gates</div>
 <div class="row2"><div><label>Minimum score (of 9)</label><input id="eMinScore" type="number" min="0" max="9"></div><div><label>Minimum ADX</label><input id="eMinAdx" type="number"></div></div>
 <div><label>Volume multiplier (x average)</label><input id="pVolMult" type="number" step="0.1"></div>
-<div class="togglerow"><div><b style="font-size:13px">Require MACD confirmation</b><div class="small">Blocks LONG on bearish MACD and SHORT on bullish MACD.</div></div>
+<div class="togglerow"><div><b style="font-size:13px">Require MACD confirmation</b><div class="small">Blocks LONG on bearish MACD and SHORT on bullish MACD  -  the fix from before.</div></div>
 <label class="switch"><input type="checkbox" id="eReqMacd"><span class="slider"></span></label></div>
 <div class="togglerow"><div><b style="font-size:13px">Require volume confirmation</b></div>
 <label class="switch"><input type="checkbox" id="eReqVol"><span class="slider"></span></label></div>
@@ -377,10 +374,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="row2"><div><label>Max open positions</label><input id="eMaxOpenPos" type="number"></div><div><label>Max correlated positions</label><input id="eMaxCorrelated" type="number"></div></div>
 <div class="row2"><div><label>Max daily loss (%)</label><input id="eMaxDailyLoss" type="number" step="0.1"></div><div><label>Cooldown after a trade (minutes)</label><input id="eCooldown" type="number"></div></div>
 <div class="row2"><div><label>Allow LONG</label><select id="eAllowLong"><option value="true">Yes</option><option value="false">No</option></select></div><div><label>Allow SHORT</label><select id="eAllowShort"><option value="true">Yes</option><option value="false">No</option></select></div></div>
-
-<div class="sectionhead">Fee &amp; universe filters</div>
-<div class="row2"><div><label>Fee gate multiplier</label><input id="eFeeGateMult" type="number" step="0.5" min="1" max="20" placeholder="4"></div><div><label>Min 24h turnover</label><input id="eMinTurnover" type="number" step="1000" min="0" placeholder="0"></div></div>
-<div class="row2"><div><label>Min candles required</label><input id="eMinCandles" type="number" step="50" min="50" max="1000" placeholder="200"></div><div><label>Entry order type</label><select id="eEntryOrderType"><option value="market">market</option><option value="limit">limit</option></select></div></div>
 
 <button class="btn" style="margin-top:16px" onclick="saveStrategyConfig()">Save Strategy Config</button>
 <div id="stratSaveResult" style="margin-top:8px"></div>
@@ -477,7 +470,6 @@ let mySettings = { capital: 100000, max_risk_per_trade_pct: 0.5 };
 let sizingMode = 'budget'; let universe = 'large'; let entryStyle = 'pullback';
 let editingId = null; let lastOrders = []; let tvWidgetLoaded = false; let currentTicket = null;
 let lastMarketTrend = 'FLAT'; let prevScanMap = {}; let prevScanTime = null; let currentApp = 'stocks';
-let stratData = null; let execData = null;
 
 function setApp(app){
   currentApp = app;
@@ -503,7 +495,7 @@ async function loadCommandCenter(){
   try{
     const r=await fetch(BASE+'/crypto-command-center'); const j=await r.json();
     if(!r.ok || !j.ok) throw new Error(j.error||'Command Center unavailable');
-    const st=j.system||j.state||{};
+    const st=j.system||{};
     const mode=String(st.mode||'paper').toUpperCase();
     status.textContent='SYSTEM: '+mode+(st.emergency_stop?' — EMERGENCY STOP':'')+(st.trading_enabled?' — TRADING ENABLED':' — TRADING DISABLED');
     const perf=j.performance||{}; const risk=j.risk||{}; const strategy=j.strategy||{};
@@ -520,6 +512,24 @@ function renderCCRows(a,empty){if(!a.length)return '<div class="small">'+empty+'
 async function ccEmergencyStop(){await ccControl({emergency_stop:true});}
 async function ccClearEmergencyStop(){await ccControl({emergency_stop:false});}
 async function ccControl(body){const el=document.getElementById('ccActionStatus');try{const r=await fetch(BASE+'/crypto-trading-control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'Control failed');el.textContent='Control updated.';loadCommandCenter();}catch(e){el.textContent=e.message;}}
+async function runPaperEngineNow(){
+  const resEl=document.getElementById('ccPaperRunResult'); resEl.innerHTML='<div class="small">Running paper engine...</div>';
+  try{
+    const r=await fetch(BASE+'/crypto-paper-engine',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'manual-ui'})});
+    const j=await r.json();
+    if(!j.ok){ resEl.innerHTML='<div class="errbox">'+(j.error||'Paper engine returned an error.')+'</div>'; return; }
+    if(j.halted){ resEl.innerHTML='<div class="warnbox">Halted: '+(j.message||'Emergency stop or daily loss limit active.')+'</div>'; return; }
+    const opened=j.opened||[], closed=j.closed||[], rejected=j.rejected||[];
+    let html='<div class="notice">Ran successfully.'+(j.checkedAt?' Checked at '+new Date(j.checkedAt).toLocaleTimeString():'')+'</div>';
+    html+='<div class="small" style="margin-top:6px">Opened: '+opened.length+'  |  Closed: '+closed.length+'  |  Rejected candidates: '+rejected.length+'  |  Active positions: '+(j.activePositions??'?')+'</div>';
+    if(opened.length){ html+='<div class="small good" style="margin-top:4px">Opened: '+opened.map(o=>o.symbol+' '+o.side).join(', ')+'</div>'; }
+    if(closed.length){ html+='<div class="small" style="margin-top:4px">Closed: '+closed.map(c=>c.symbol+' ('+(c.reason||'').split('|').pop()+', P&L '+Number(c.pnl||0).toFixed(2)+')').join(', ')+'</div>'; }
+    if(rejected.length){ html+='<div class="small" style="margin-top:4px;color:#9aa8c2">Rejected: '+rejected.slice(0,5).map(x=>x.symbol+' ('+x.reason+')').join(', ')+(rejected.length>5?' +'+(rejected.length-5)+' more':'')+'</div>'; }
+    if(!opened.length && !closed.length && !rejected.length){ html+='<div class="small" style="margin-top:4px">No eligible signals found in the last 10 minutes  -  this is expected if the signal generator upstream hasn\'t written anything recently.</div>'; }
+    resEl.innerHTML=html;
+    loadCommandCenter();
+  }catch(e){ resEl.innerHTML='<div class="errbox">Could not reach paper engine.</div>'; }
+}
 
 function showCryptoTab(name){
   document.querySelectorAll('#app-crypto .tabpanel').forEach(el => el.classList.remove('active'));
@@ -992,119 +1002,58 @@ async function loadCryptoPortfolio(){
     cPositions.innerHTML = html || 'No open positions.';
   }catch(e){ cBalances.innerHTML = '<span class="bad">Connect Delta Exchange India in Settings first.</span>'; }
 }
-
 async function runCryptoScan(){
   cScanState.textContent = 'Scanning...'; cScanResults.innerHTML = ''; cTicketCard.style.display = 'none';
-  lastCryptoScan = [];
+  lastCryptoScan = []; let offset = 0, totalErrors = 0, minScoreSeen = null, safety = 0;
   try{
-    const r = await fetch(BASE+'/delta-scanner?limit=60&offset=0');
-    const j = await r.json();
-    if(j.error === 'not_configured'){ cScanState.textContent = 'Not configured.'; cScanDetail.textContent = j.detail || 'crypto_strategy_configs or crypto_execution_settings has no row yet.'; return; }
-    if(!j.success){ cScanState.textContent = 'Scan failed.'; cScanDetail.textContent = j.error || 'Backend error.'; return; }
-    lastCryptoScan = (j.results || []).filter(x => x.side !== 'ERROR');
-    const errorCount = (j.results || []).length - lastCryptoScan.length;
+    while(safety++ < 20){
+      const r = await fetch(BASE+'/delta-scanner?limit=60&offset='+offset);
+      const j = await r.json();
+      if(j.error === 'not_configured' || (j.success===false && j.error==='not_configured')){ cScanState.textContent = 'Not configured.'; cScanDetail.textContent = 'crypto_strategy_configs or crypto_execution_settings has no row yet.'; return; }
+      if(!j.success){ cScanState.textContent = 'Scan failed.'; cScanDetail.textContent = j.error || 'Backend error.'; return; }
+      const rows = j.results || [];
+      rows.forEach(x => { if(x.side==='ERROR') totalErrors++; else lastCryptoScan.push(x); });
+      if(minScoreSeen===null && rows.length) minScoreSeen = rows[0].minScore;
+      cScanState.textContent = 'Scanning... ('+(j.scan?.offset+rows.length||lastCryptoScan.length)+'/'+(j.scan?.totalSymbols||'?')+' symbols)';
+      if(!j.scan || !j.scan.hasMore) break;
+      offset = j.scan.nextOffset;
+    }
     if(!lastCryptoScan.length){ cScanState.textContent = 'No data returned.'; cScanDetail.textContent = 'Try again.'; return; }
-    renderCryptoScan(errorCount, j.thresholds || {}, j.scan || {});
+    renderCryptoScan(totalErrors, minScoreSeen);
   }catch(e){ cScanState.textContent = 'Scan failed.'; cScanDetail.textContent = 'Could not reach scanner.'; }
 }
-
-const C_QUALITY_CLASS = { 'A+': 'full', 'A': 'full', 'B': 'medium', 'C': 'low', 'REJECTED': 'rejected' };
-
-function renderCryptoScan(errors, thresholds, scanMeta){
-  const tradable = lastCryptoScan.filter(x => x.tradable);
-  const rejected = lastCryptoScan.filter(x => !x.tradable);
-  const tf = (scanMeta && scanMeta.timeframe) || '5m';
-  const minScore = thresholds.minScore ?? 7;
-  const minAdx = thresholds.minAdx ?? 20;
-  const gate = thresholds.feeGateMultiplier ?? 4;
-  const riskApplied = thresholds.maxRiskPct ?? 2;
-
-  cScanState.textContent = tradable.length > 0
-    ? tradable.length + ' tradable signal' + (tradable.length === 1 ? '' : 's') + ' found'
-    : 'No tradable signals right now';
-  cScanDetail.textContent =
-    lastCryptoScan.length + ' symbols scanned  |  ' + tradable.length + ' tradable  |  ' +
-    tf + '  |  score>=' + minScore + '/9  |  ADX>=' + minAdx + '  |  risk ' + riskApplied + '%  |  fee gate ' + gate + 'x  |  ' + errors + ' unavailable';
-
+function renderCryptoScan(errors, minScoreSeen){
+  const tradableCount = lastCryptoScan.filter(x => x.tradable).length;
+  cScanState.textContent = tradableCount>0 ? 'GREEN '+tradableCount+' tradable signal'+(tradableCount===1?'':'s')+' found' : 'RED No tradable signals right now';
+  cScanDetail.textContent = lastCryptoScan.length+' symbols scanned  |  '+tradableCount+' tradable  |  min score '+(minScoreSeen??'?')+'/9  |  '+errors+' unavailable.';
+  const sorted = [...lastCryptoScan].sort((a,b) => (b.tradable-a.tradable) || (b.score-a.score));
   let html = '';
-
-  if(tradable.length){
-    html += '<div class="sectionhead">Tradable tickets (sorted by expected net after fees)</div>';
-    tradable.forEach((x, i) => { html += ticketCardHtml(x, i+1); });
-  } else {
-    html += '<div class="card"><div class="small">No signal passes the current gates. Loosen min score, ADX, or the fee gate in Strategy, then scan again.</div></div>';
-  }
-
-  if(rejected.length){
-    html += '<div class="sectionhead" style="margin-top:16px">Rejected ('+Math.min(rejected.length,20)+' of '+rejected.length+', by score)</div>';
-    rejected.slice(0,20).forEach((x, i) => { html += rejectedCardHtml(x, i+1); });
-  }
-
+  sorted.forEach((x, i) => {
+    const isLong = x.side==='LONG'; const isShort = x.side==='SHORT';
+    const sideLabel = isLong ? 'BUY / LONG' : isShort ? 'SELL / SHORT' : 'HOLD';
+    const sideClass = isLong ? 'buy' : isShort ? 'sell' : 'hold';
+    const qClass = x.tradable ? 'full' : 'rejected';
+    html += '<div class="scancard conf-'+qClass+'"><div class="scancard-head"><span class="scancard-rank">#'+(i+1)+'</span><b>'+x.symbol+'</b>'+
+      '<span class="pill">'+x.score+'/'+(x.minScore||9)+'</span><span class="scancard-side '+sideClass+'">'+sideLabel+'</span></div>'+
+      '<div><span class="conftag '+qClass+'">'+(x.tradable?'GREEN Tradable':'RED Not tradable')+'</span></div>'+
+      '<div class="scancard-grid">'+
+      '<div class="scancard-item"><div class="lbl">ADX</div><div class="val">'+(Number.isFinite(x.adx)?x.adx.toFixed(1):' - ')+'</div></div>'+
+      '<div class="scancard-item"><div class="lbl">Volume Ratio</div><div class="val">'+(Number.isFinite(x.volumeRatio)?x.volumeRatio.toFixed(2)+'x':' - ')+'</div></div>'+
+      '<div class="scancard-item"><div class="lbl">Qty (if tradable)</div><div class="val">'+(x.qty||0).toFixed(4)+'</div></div>'+
+      '<div class="scancard-item"><div class="lbl">Contract Value</div><div class="val">'+x.contractValue+'</div></div>'+
+      '<div class="scancard-item"><div class="lbl">MACD confirmed</div><div class="val">'+(x.macdFinite===false?'no data yet':(x.macdFinite?'yes':'no'))+'</div></div>'+
+      '<div class="scancard-item"><div class="lbl">Bars used</div><div class="val">'+(x.barCount??' - ')+'</div></div></div>'+
+      '<div class="small" style="margin-top:8px">Entry price, stop loss, target, and P&amp;L estimates are no longer provided by the scanner \u2014 use the Backtest tab or Command Center for full trade detail.</div>'+
+      (x.tradable ? '<button class="btn" style="margin-top:10px" onclick=\'cUseSetup('+JSON.stringify({symbol:x.symbol,side:x.side,qty:x.qty})+')\'>Prefill Log (symbol/side/qty only)</button>' : '')+
+      '</div>';
+  });
   cScanResults.innerHTML = html;
 }
-
-function ticketCardHtml(x, rank){
-  const isLong = x.side === 'LONG';
-  const sideLabel = isLong ? 'BUY / LONG' : 'SELL / SHORT';
-  const sideClass = isLong ? 'buy' : 'sell';
-  const qClass = C_QUALITY_CLASS[x.quality] || 'rejected';
-  const f = (v, d) => { const n = Number(v); return Number.isFinite(n) ? n.toFixed(d ?? 4) : '—'; };
-  const why = Array.isArray(x.why) ? x.why.join(' + ') : '';
-  const ratioColor = (x.feeRatio || 0) >= 6 ? 'good' : (x.feeRatio || 0) >= 4 ? 'warn' : 'bad';
-  return '<div class="scancard conf-'+qClass+'">'+
-    '<div class="scancard-head"><span class="scancard-rank">#'+rank+'</span><b>'+esc(x.symbol)+'</b>'+
-      '<span class="pill">'+x.score+'/9</span>'+
-      '<span class="scancard-side '+sideClass+'">'+sideLabel+'</span></div>'+
-    '<div><span class="conftag '+qClass+'">'+(x.quality||'')+'</span>'+
-      '<span class="mkttag with" style="margin-left:6px">'+(x.timeframe||'5m')+'</span></div>'+
-    (why?'<div class="scancard-why">'+esc(why)+'</div>':'')+
-    '<div class="scancard-grid">'+
-      '<div class="scancard-item"><div class="lbl">Price</div><div class="val">'+f(x.price,6)+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">'+(isLong?'Buy Entry':'Sell Entry')+'</div><div class="val">'+f(x.entry,6)+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Stop (mark)</div><div class="val bad">'+f(x.sl,6)+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Target (mark)</div><div class="val good">'+f(x.target,6)+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Qty (contracts)</div><div class="val">'+f(x.qty,4)+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Contract Value</div><div class="val">'+f(x.contractValue,6)+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Notional</div><div class="val">'+f(x.notionalValue,2)+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Margin Required</div><div class="val">'+f(x.marginRequired,2)+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Leverage</div><div class="val">'+(x.leverage||'—')+'x</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Possible Profit</div><div class="val good">'+f(x.possibleProfit,2)+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Possible Loss</div><div class="val bad">'+f(x.possibleLoss,2)+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Fees (round trip)</div><div class="val">'+f(x.feeEstimate,2)+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Net Expected</div><div class="val '+(Number(x.netExpected)>=0?'good':'bad')+'">'+f(x.netExpected,2)+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Fee Ratio</div><div class="val '+ratioColor+'">'+f(x.feeRatio,2)+'x</div></div>'+
-      '<div class="scancard-item"><div class="lbl">Liq. Move %</div><div class="val">'+f(x.roughLiquidationMovePct,2)+'%</div></div>'+
-      '<div class="scancard-item"><div class="lbl">ADX / RSI / Vol</div><div class="val">'+f(x.adx,1)+' / '+f(x.rsi,1)+' / '+f(x.volumeRatio,2)+'x</div></div>'+
-    '</div>'+
-    '<div class="explainbox liqwarn" style="margin-top:8px"><b>Order plan:</b> '+esc(x.entryOrderType||'market')+' '+(isLong?'buy':'sell')+' at <b>'+f(x.entry,6)+'</b> · stop on mark price <b>'+f(x.sl,6)+'</b> · target on mark price <b>'+f(x.target,6)+'</b> · qty <b>'+f(x.qty,4)+'</b> contracts · leverage <b>'+(x.leverage||'—')+'x</b>. At '+x.leverage+'x, a ~'+f(x.roughLiquidationMovePct,2)+'% adverse move can liquidate.</div>'+
-    '<button class="btn" style="margin-top:10px" onclick=\'cUseSetup('+JSON.stringify(x).replace(/'/g,"&#39;")+')\'>Prefill Log</button>'+
-  '</div>';
-}
-
-function rejectedCardHtml(x, rank){
-  const f = (v,d) => { const n = Number(v); return Number.isFinite(n) ? n.toFixed(d ?? 2) : '—'; };
-  const why = Array.isArray(x.why) ? x.why.join(' + ') : '';
-  const reasons = Array.isArray(x.rejections) ? x.rejections.join('; ') : (x.error || 'no reason returned');
-  return '<div class="scancard conf-rejected">'+
-    '<div class="scancard-head"><span class="scancard-rank">#'+rank+'</span><b>'+esc(x.symbol)+'</b>'+
-      '<span class="pill">'+(x.score ?? 0)+'/9</span>'+
-      '<span class="scancard-side hold">'+esc(x.side||'HOLD')+'</span></div>'+
-    (why?'<div class="scancard-why">'+esc(why)+'</div>':'')+
-    '<div class="rejbox"><b>Rejected:</b> '+esc(reasons)+'</div>'+
-    (Number.isFinite(Number(x.price)) ? '<div class="small" style="margin-top:6px">price '+f(x.price,6)+' · ADX '+f(x.adx,1)+' · RSI '+f(x.rsi,1)+' · vol '+f(x.volumeRatio,2)+'x</div>' : '')+
-  '</div>';
-}
-
 function cUseSetup(x){
-  cSymbol.value = x.symbol; cSide.value = x.side; cQty.value = Number(x.qty || 0).toFixed(4);
-  cEntry.value = Number.isFinite(Number(x.entry)) ? Number(x.entry).toFixed(6) : '';
-  cSL.value = Number.isFinite(Number(x.sl)) ? Number(x.sl).toFixed(6) : '';
-  cTarget.value = Number.isFinite(Number(x.target)) ? Number(x.target).toFixed(6) : '';
-  cMargin.value = Number.isFinite(Number(x.marginRequired)) ? Number(x.marginRequired).toFixed(2) : '';
-  cLeverage.value = x.leverage || '';
+  cSymbol.value = x.symbol; cSide.value = x.side; cQty.value = (x.qty||0).toFixed(4);
+  cEntry.value = ''; cSL.value = ''; cTarget.value = ''; cMargin.value = ''; cLeverage.value = '';
   showCryptoTab('log');
 }
-
 async function cLogTrade(){
   cOrderResult.innerHTML = cEditingId ? 'Updating...' : 'Saving...';
   const body = { symbol: cSymbol.value.toUpperCase().trim(), side: cSide.value, leverage: parseFloat(cLeverage.value||'0')||null,
@@ -1248,7 +1197,7 @@ async function loadDeltaConnectionState(){
   status.textContent='Saved credentials found. Tap Test Delta Connection to verify.';
 }
 async function loadDeltaProducts(){
-  const st=document.getElementById('cryptoUniverseStatus'); try{const r=await fetch(BASE+'/delta-products');const j=await r.json();deltaProducts=j.products||[]; populateBacktestSymbols(); if(!deltaProducts.length){st.textContent='Delta market catalogue is empty  -  tap Scan Now after the catalogue sync is available.';return;} st.textContent=deltaProducts.length+' live perpetual markets available from Delta Exchange India.'; buildSymGrid(stratData && stratData.symbols ? stratData.symbols : []); applyCryptoUniverse();}catch(e){st.textContent='Could not load Delta market catalogue.';}
+  const st=document.getElementById('cryptoUniverseStatus'); try{const r=await fetch(BASE+'/delta-products');const j=await r.json();deltaProducts=j.products||[]; populateBacktestSymbols(); if(!deltaProducts.length){st.textContent='Delta market catalogue is empty  -  tap Scan Now after the catalogue sync is available.';return;} st.textContent=deltaProducts.length+' live perpetual markets available from Delta Exchange India.'; buildSymGrid(stratData?.symbols||[]); applyCryptoUniverse();}catch(e){st.textContent='Could not load Delta market catalogue.';}
 }
 function selectedManualSymbols(){return Array.from(document.querySelectorAll('.symChk')).filter(c=>c.checked).map(c=>c.value);}
 function buildSymGrid(selected){
@@ -1260,7 +1209,7 @@ function buildSymGrid(selected){
 }
 function filterCryptoSymbols(){buildSymGrid(selectedManualSymbols());}
 function applyCryptoUniverse(){
-  const u=document.getElementById('cryptoUniverse')?.value||'all'; const current=(stratData && stratData.symbols) || [];
+  const u=document.getElementById('cryptoUniverse')?.value||'all'; const current=stratData?.symbols||[];
   if(u==='manual'){buildSymGrid(current);return;}
   const list=deltaProducts.map(p=>p.symbol).filter(Boolean); const chosen=u==='all'?list:u==='top10'?list.slice(0,10):u==='top25'?list.slice(0,25):list.slice(0,50); buildSymGrid(chosen);
 }
@@ -1303,12 +1252,6 @@ async function loadStrategyConfig(){
     eMaxOpenPos.value = execData.max_open_positions; eMaxCorrelated.value = execData.max_correlated_positions;
     eMaxDailyLoss.value = execData.max_daily_loss_pct; eCooldown.value = execData.cooldown_minutes;
     eAllowLong.value = String(!!execData.allow_long); eAllowShort.value = String(!!execData.allow_short);
-    if(document.getElementById('eFeeGateMult')) document.getElementById('eFeeGateMult').value = execData.fee_gate_multiplier ?? 4;
-    if(document.getElementById('eMinTurnover')) document.getElementById('eMinTurnover').value = execData.min_turnover_24h ?? 0;
-    if(document.getElementById('eMinCandles')) document.getElementById('eMinCandles').value = execData.min_candles_required ?? 200;
-    if(document.getElementById('eEntryOrderType')) document.getElementById('eEntryOrderType').value = execData.entry_order_type || 'market';
-    if(document.getElementById('eExcludedSymbols')) document.getElementById('eExcludedSymbols').value = Array.isArray(execData.excluded_symbols) ? execData.excluded_symbols.join(',') : '';
-    if(document.getElementById('cryptoTimeframe')) document.getElementById('cryptoTimeframe').value = stratData.timeframe || '5m';
   }catch(e){ document.getElementById('stratNameLine').textContent = 'Could not load strategy config.'; }
 }
 async function saveStrategyConfig(){
@@ -1316,12 +1259,11 @@ async function saveStrategyConfig(){
   resEl.innerHTML = '<div class="small">Saving...</div>';
   const universeMode = document.getElementById('cryptoUniverse')?.value || 'all';
   const selectedSymbols = universeMode==='all' ? [] : Array.from(document.querySelectorAll('.symChk')).filter(c => c.checked).map(c => c.value);
-  const exclusions = (document.getElementById('eExcludedSymbols')?.value || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
   const body = {
     enabled: stratEnabled.checked,
     universe: universeMode,
     symbols: selectedSymbols,
-    timeframe: (document.getElementById('cryptoTimeframe')?.value) || (stratData ? stratData.timeframe : '5m'),
+    timeframe: stratData ? stratData.timeframe : '5m',
     parameters: {
       ema_fast: parseFloat(pEmaFast.value), ema_slow: parseFloat(pEmaSlow.value),
       rsi_period: parseFloat(pRsiPeriod.value), rsi_long_min: parseFloat(pRsiLongMin.value), rsi_long_max: parseFloat(pRsiLongMax.value),
@@ -1337,11 +1279,6 @@ async function saveStrategyConfig(){
       max_open_positions: parseFloat(eMaxOpenPos.value), max_correlated_positions: parseFloat(eMaxCorrelated.value),
       max_daily_loss_pct: parseFloat(eMaxDailyLoss.value), cooldown_minutes: parseFloat(eCooldown.value),
       allow_long: eAllowLong.value==='true', allow_short: eAllowShort.value==='true',
-      fee_gate_multiplier: parseFloat(document.getElementById('eFeeGateMult')?.value || '4'),
-      min_turnover_24h: parseFloat(document.getElementById('eMinTurnover')?.value || '0'),
-      min_candles_required: parseFloat(document.getElementById('eMinCandles')?.value || '200'),
-      entry_order_type: document.getElementById('eEntryOrderType')?.value || 'market',
-      excluded_symbols: exclusions,
     }
   };
   try{
@@ -1492,7 +1429,7 @@ function renderBacktestSingle(res){
   btResults.innerHTML = html;
 }
 function renderBacktestComparison(results){
-  const valid = results.filter(r => r.success);
+  const valid = results.filter(r => r.success).sort((a,b) => b.metrics.netPnl - a.metrics.netPnl);
   if(!valid.length){ btResults.innerHTML = '<div class="card errbox">No symbols produced enough data for this period.</div>'; return; }
   const bestPnl = valid.reduce((a,b) => b.metrics.netPnl > a.metrics.netPnl ? b : a);
   const worstPnl = valid.reduce((a,b) => b.metrics.netPnl < a.metrics.netPnl ? b : a);
@@ -1527,5 +1464,3 @@ function showBtDetail(sym){
 checkAuth(); loadSettings(); loadMargins(); loadPositions(); loadOrders(); updateFormLabels(); setMode('budget'); setUniverse('large'); setStyle('pullback');
 loadCryptoSettings(); loadDeltaCredentialState(); loadDeltaConnectionState(); loadDeltaProducts(); loadCryptoOrders(); loadStrategyConfig(); setBtDays(30); loadKiteCredentialState(); finishKiteCallback(); checkAuth();
 </script></body></html>
-
-
