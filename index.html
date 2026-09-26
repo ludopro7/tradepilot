@@ -410,7 +410,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="card notice">This tab is your REAL Delta Exchange India account, read live via your API key. Nothing here is simulated. Paper/manual trades live only in the Log &amp; Performance tab and are never mixed in here.</div>
 <div class="card"><h3 style="margin-top:0">Wallet Balance (Real Account)</h3><div id="cBalances" class="small">Tap refresh to load.</div><button class="btn btn2" onclick="loadCryptoPortfolio()">Refresh</button></div>
 <div class="card"><h3 style="margin-top:0">Open Positions (Real Account)</h3><div id="cPositions" class="small"></div></div>
-<div class="card"><h3 style="margin-top:0">Real Delta Order/Trade History</h3><div class="small">Tries to pull your actual Delta fills via your API key. If your key or the backend doesn't support that yet, use the direct link to check on Delta's own site instead.</div><div id="cDeltaHistory" class="small" style="margin-top:8px">Not loaded yet.</div><div class="row2" style="margin-top:8px"><button class="btn btn2" onclick="loadDeltaHistory()">Load Real History</button><a class="btn" style="text-decoration:none;display:inline-block;text-align:center" href="https://india.delta.exchange/app/orders" target="_blank" rel="noopener">Open on Delta.exchange</a></div></div>
+<div class="card"><h3 style="margin-top:0">Real Delta Order/Trade History</h3><div class="small">Pulls your actual executed fills straight from your Delta account via your API key  -  this is your genuine trading history, shown here in the app.</div><div id="cDeltaHistory" class="small" style="margin-top:8px">Not loaded yet.</div><div class="row2" style="margin-top:8px"><button class="btn btn2" onclick="loadDeltaHistory()">Load Real History</button></div></div>
 <div class="card small">Read Data key from Delta Exchange India, routed through the same static IP as Zerodha.</div>
 </div>
 <div class="tabpanel" id="cTab-log">
@@ -1193,19 +1193,25 @@ async function loadCryptoPortfolio(){
     cPositions.innerHTML = html || 'No open positions.';
   }catch(e){ cBalances.innerHTML = '<span class="bad">Connect Delta Exchange India in Settings first.</span>'; }
 }
+function fmtDeltaTime(v){
+  if(!v) return '-';
+  const n = Number(v);
+  const d = Number.isFinite(n) ? new Date(n > 1e12 ? n : n*1000) : new Date(v);
+  return isNaN(d.getTime()) ? String(v) : d.toLocaleString('en-IN');
+}
 async function loadDeltaHistory(){
   const el = document.getElementById('cDeltaHistory');
-  el.textContent = 'Loading...';
+  el.textContent = 'Loading your real fills from Delta...';
   try{
     const j = await deltaPrivate('fills');
-    if(!j.ok){ el.innerHTML = '<span class="warnbox">Not available from here yet ('+(j.error||'backend does not support this action')+'). Use "Open on Delta.exchange" to see your real order/trade history directly.</span>'; return; }
+    if(!j.ok){ el.innerHTML = '<span class="warnbox">Delta did not return your history: '+esc(j.error||'unknown error')+'. Check your saved API credentials in Settings and try again.</span>'; return; }
     const rows = j.fills || j.data || j.result || [];
-    if(!rows.length){ el.textContent = 'No fills returned.'; return; }
-    let html = '<div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Price</th><th>Time</th></tr>';
-    rows.slice(0,50).forEach(f => { html += '<tr><td>'+esc(f.product_symbol||f.symbol||'-')+'</td><td>'+esc(f.side||'-')+'</td><td>'+esc(f.size??'-')+'</td><td>'+esc(f.price??'-')+'</td><td>'+esc(f.created_at||f.time||'-')+'</td></tr>'; });
+    if(!rows.length){ el.textContent = 'No real fills found on your Delta account yet.'; return; }
+    let html = '<div class="small" style="margin-bottom:6px">'+rows.length+' real fill(s), most recent first.</div><div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Price</th><th>Fee</th><th>Time</th></tr>';
+    rows.slice(0,100).forEach(f => { html += '<tr><td>'+esc(f.product_symbol||f.symbol||'-')+'</td><td class="'+(String(f.side||'').toLowerCase()==='buy'?'good':'bad')+'">'+esc(f.side||'-')+'</td><td>'+esc(f.size??'-')+'</td><td>'+esc(f.price??'-')+'</td><td>'+esc(f.commission??'-')+'</td><td>'+esc(fmtDeltaTime(f.created_at||f.time))+'</td></tr>'; });
     html += '</table></div>';
     el.innerHTML = html;
-  }catch(e){ el.innerHTML = '<span class="warnbox">Could not reach Delta. Use "Open on Delta.exchange" instead.</span>'; }
+  }catch(e){ el.innerHTML = '<span class="warnbox">Could not reach Delta right now. Try again in a moment.</span>'; }
 }
 async function runCryptoScan(){
   cScanState.textContent = 'Scanning...'; cScanResults.innerHTML = ''; cTicketCard.style.display = 'none';
