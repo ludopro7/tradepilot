@@ -410,7 +410,13 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="card notice">This tab is your REAL Delta Exchange India account, read live via your API key. Nothing here is simulated. Paper/manual trades live only in the Log &amp; Performance tab and are never mixed in here.</div>
 <div class="card"><h3 style="margin-top:0">Wallet Balance (Real Account)</h3><div id="cBalances" class="small">Tap refresh to load.</div><button class="btn btn2" onclick="loadCryptoPortfolio()">Refresh</button></div>
 <div class="card"><h3 style="margin-top:0">Open Positions (Real Account)</h3><div id="cPositions" class="small"></div></div>
-<div class="card"><h3 style="margin-top:0">Real Delta Order/Trade History</h3><div class="small">Pulls your actual executed fills straight from your Delta account via your API key  -  this is your genuine trading history, shown here in the app.</div><div id="cDeltaHistory" class="small" style="margin-top:8px">Not loaded yet.</div><div class="row2" style="margin-top:8px"><button class="btn btn2" onclick="loadDeltaHistory()">Load Real History</button></div></div>
+<div class="card"><h3 style="margin-top:0">Real Delta Order/Trade History</h3><div class="small">Pulls your actual executed fills straight from your Delta account via your API key  -  this is your genuine trading history, shown here in the app.</div>
+<div class="row2" style="margin-top:10px"><div><label>From</label><input id="dhFrom" type="date"></div><div><label>To</label><input id="dhTo" type="date"></div></div>
+<div class="row2" style="margin-top:8px"><div><label>Side</label><select id="dhSide" onchange="renderDeltaHistoryTable()"><option value="ALL">All</option><option value="buy">Buy only</option><option value="sell">Sell only</option></select></div><div><label>Symbol contains</label><input id="dhSymbol" placeholder="e.g. BTC" oninput="renderDeltaHistoryTable()"></div></div>
+<div class="togglerow" style="margin-top:8px"><div><b style="font-size:13px">Executed fills only</b><div class="small">Hides any non-fill/cancelled entries the API may include  -  on by default.</div></div>
+<label class="switch"><input type="checkbox" id="dhExecutedOnly" checked onchange="renderDeltaHistoryTable()"><span class="slider"></span></label></div>
+<div class="row2" style="margin-top:10px"><button class="btn btn2" onclick="loadDeltaHistory()">Load Real History</button><button class="btn" onclick="downloadDeltaHistory()">Download CSV</button></div>
+<div id="cDeltaHistory" class="small" style="margin-top:8px">Not loaded yet.</div></div>
 <div class="card small">Read Data key from Delta Exchange India, routed through the same static IP as Zerodha.</div>
 </div>
 <div class="tabpanel" id="cTab-log">
@@ -1199,19 +1205,73 @@ function fmtDeltaTime(v){
   const d = Number.isFinite(n) ? new Date(n > 1e12 ? n : n*1000) : new Date(v);
   return isNaN(d.getTime()) ? String(v) : d.toLocaleString('en-IN');
 }
+let lastDeltaFills = [];
 async function loadDeltaHistory(){
   const el = document.getElementById('cDeltaHistory');
   el.textContent = 'Loading your real fills from Delta...';
   try{
-    const j = await deltaPrivate('fills');
+    const extra = {};
+    const fromV = document.getElementById('dhFrom').value;
+    const toV = document.getElementById('dhTo').value;
+    if(fromV) extra.start_time = Math.floor(new Date(fromV+'T00:00:00').getTime()) * 1000;
+    if(toV) extra.end_time = Math.floor(new Date(toV+'T23:59:59').getTime()) * 1000;
+    const j = await deltaPrivate('fills', extra);
     if(!j.ok){ el.innerHTML = '<span class="warnbox">Delta did not return your history: '+esc(j.error||'unknown error')+'. Check your saved API credentials in Settings and try again.</span>'; return; }
-    const rows = j.fills || j.data || j.result || [];
-    if(!rows.length){ el.textContent = 'No real fills found on your Delta account yet.'; return; }
-    let html = '<div class="small" style="margin-bottom:6px">'+rows.length+' real fill(s), most recent first.</div><div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Price</th><th>Fee</th><th>Time</th></tr>';
-    rows.slice(0,100).forEach(f => { html += '<tr><td>'+esc(f.product_symbol||f.symbol||'-')+'</td><td class="'+(String(f.side||'').toLowerCase()==='buy'?'good':'bad')+'">'+esc(f.side||'-')+'</td><td>'+esc(f.size??'-')+'</td><td>'+esc(f.price??'-')+'</td><td>'+esc(f.commission??'-')+'</td><td>'+esc(fmtDeltaTime(f.created_at||f.time))+'</td></tr>'; });
-    html += '</table></div>';
-    el.innerHTML = html;
+    lastDeltaFills = j.fills || j.data || j.result || [];
+    if(!lastDeltaFills.length){ el.textContent = 'No real fills found for this range on your Delta account.'; return; }
+    renderDeltaHistoryTable();
   }catch(e){ el.innerHTML = '<span class="warnbox">Could not reach Delta right now. Try again in a moment.</span>'; }
+}
+function filteredDeltaFills(){
+  const side = (document.getElementById('dhSide')?.value || 'ALL').toLowerCase();
+  const sym = (document.getElementById('dhSymbol')?.value || '').trim().toUpperCase();
+  const executedOnly = document.getElementById('dhExecutedOnly')?.checked;
+  return lastDeltaFills.filter(f => {
+    if(executedOnly){
+      const state = String(f.state||f.fill_type||'filled').toLowerCase();
+      if(state.includes('cancel') || state.includes('reject')) return false;
+      if(!(f.size||f.filled_size)) return false;
+    }
+    if(side!=='all' && String(f.side||'').toLowerCase()!==side) return false;
+    if(sym && !String(f.product_symbol||f.symbol||'').toUpperCase().includes(sym)) return false;
+    return true;
+  });
+}
+function renderDeltaHistoryTable(){
+  const el = document.getElementById('cDeltaHistory');
+  if(!lastDeltaFills.length){ return; }
+  const rows = filteredDeltaFills();
+  if(!rows.length){ el.innerHTML = '<div class="small">No fills match the current filters.</div>'; return; }
+  let html = '<div class="small" style="margin-bottom:6px">'+rows.length+' of '+lastDeltaFills.length+' fill(s) shown, most recent first.</div><div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Price</th><th>Fee</th><th>Time</th></tr>';
+  rows.forEach(f => { html += '<tr><td>'+esc(f.product_symbol||f.symbol||'-')+'</td><td class="'+(String(f.side||'').toLowerCase()==='buy'?'good':'bad')+'">'+esc(f.side||'-')+'</td><td>'+esc(f.size??'-')+'</td><td>'+esc(f.price??'-')+'</td><td>'+esc(f.commission??'-')+'</td><td>'+esc(fmtDeltaTime(f.created_at||f.time))+'</td></tr>'; });
+  html += '</table></div>';
+  el.innerHTML = html;
+}
+function downloadDeltaHistory(){
+  if(!lastDeltaFills.length){ alert('Tap "Load Real History" first.'); return; }
+  const rows = filteredDeltaFills();
+  if(!rows.length){ alert('No fills match the current filters.'); return; }
+  const headers = ['symbol','side','size','price','commission','time'];
+  const lines = [headers.join(',')];
+  rows.forEach(f => {
+    const line = [
+      f.product_symbol||f.symbol||'',
+      f.side||'',
+      f.size??'',
+      f.price??'',
+      f.commission??'',
+      fmtDeltaTime(f.created_at||f.time)
+    ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',');
+    lines.push(line);
+  });
+  const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fromV = document.getElementById('dhFrom').value || 'all';
+  const toV = document.getElementById('dhTo').value || 'all';
+  a.href = url; a.download = 'delta-trade-history_'+fromV+'_to_'+toV+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 async function runCryptoScan(){
   cScanState.textContent = 'Scanning...'; cScanResults.innerHTML = ''; cTicketCard.style.display = 'none';
@@ -1433,12 +1493,12 @@ async function loadDeltaCredentialState(){
   if(creds) document.getElementById('deltaApiKey').value=creds.api_key||'';
 }
 
-async function deltaPrivate(action){
+async function deltaPrivate(action,extra){
   const creds=await getDeltaCredentials();
   if(!creds) return {ok:false,error:'No Delta API credentials saved in this dashboard.'};
   if(!creds.proxy_url) return {ok:false,error:'Noble proxy URL is missing \u2014 clear and re-save your Delta credentials including the proxy URL.'};
   try{
-    const r=await fetch(BASE+'/delta-connection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,api_key:creds.api_key,api_secret:creds.api_secret,proxy_url:creds.proxy_url})});
+    const r=await fetch(BASE+'/delta-connection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({action,api_key:creds.api_key,api_secret:creds.api_secret,proxy_url:creds.proxy_url},extra||{}))});
     return await r.json();
   }catch(e){
     return {ok:false,error:'Could not reach Delta connection service.'};
