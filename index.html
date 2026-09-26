@@ -1264,6 +1264,7 @@ function computeFillsPnl(fills){
   });
   return chronological;
 }
+let lastLiveOpenSymbols = new Set();
 async function loadDeltaHistory(){
   const el = document.getElementById('cDeltaHistory');
   el.textContent = 'Loading your real fills from Delta...';
@@ -1276,12 +1277,20 @@ async function loadDeltaHistory(){
     const limitV = document.getElementById('dhLimit')?.value || '100';
     if(limitV === 'all'){ extra.fetch_all = true; extra.page_size = 250; }
     else extra.page_size = parseInt(limitV) || 100;
+    // Fetch your REAL current open positions too -- this is ground truth, unlike a fill
+    // window (which may not go back far enough to see the fill that originally opened a
+    // position, making it look "still open" here even though it's long since been closed).
+    const acctP = deltaPrivate('account');
     const j = await deltaPrivate('fills', extra);
     if(!j.ok){ el.innerHTML = '<span class="warnbox">Delta did not return your history: '+esc(j.error||'unknown error')+'. Check your saved API credentials in Settings and try again.</span>'; return; }
     lastDeltaFills = j.fills || j.data || j.result || [];
     if(!lastDeltaFills.length){ el.textContent = 'No real fills found for this range on your Delta account.'; return; }
     lastDeltaFillsAnnotated = computeFillsPnl(lastDeltaFills).reverse(); // most recent first
     if(j.truncated) lastDeltaFillsAnnotated._truncated = true;
+    try{
+      const acct = await acctP;
+      lastLiveOpenSymbols = new Set((acct.positions||[]).filter(p => Number(p.size||0)!==0).map(p => String(p.symbol||p.product_symbol||'').toUpperCase()));
+    }catch(e){ lastLiveOpenSymbols = new Set(); }
     renderDeltaHistoryTable();
   }catch(e){ el.innerHTML = '<span class="warnbox">Could not reach Delta right now. Try again in a moment.</span>'; }
 }
@@ -1306,12 +1315,14 @@ function renderDeltaHistoryTable(){
   const allTimesZero = lastDeltaFillsAnnotated.every(nf => !nf.timeMs);
   if(allTimesZero) html += '<div class="warnbox" style="margin-bottom:8px">Could not read a usable timestamp from any fill  -  Open/Closed status and P&amp;L below may be unreliable. Tap "view the raw fields" below and send it over so the time field can be mapped correctly.</div>';
   if(lastDeltaFillsAnnotated._truncated) html += '<div class="small" style="margin-bottom:8px">Showing the first 2000 fills for this range  -  narrow the date range to see more.</div>';
-  html += '<div class="small" style="margin-bottom:6px">'+rows.length+' of '+lastDeltaFillsAnnotated.length+' fill(s) shown, most recent first. Net realized P&amp;L shown: <b class="'+(totalPnl>=0?'good':'bad')+'">'+totalPnl.toFixed(2)+'</b> (fees not subtracted)</div>';
-  html += '<div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Exec Price</th><th>Fee</th><th>P&amp;L</th><th>Status</th><th>Time</th></tr>';
+  html += '<div class="small" style="margin-bottom:6px">'+rows.length+' of '+lastDeltaFillsAnnotated.length+' fill(s) shown, most recent first. Net realized P&amp;L shown (this window only): <b class="'+(totalPnl>=0?'good':'bad')+'">'+totalPnl.toFixed(2)+'</b> (fees not subtracted)</div>';
+  html += '<div class="notice" style="margin-bottom:8px">Currently open on your real Delta account right now: <b>'+(lastLiveOpenSymbols.size ? [...lastLiveOpenSymbols].join(', ') : 'none')+'</b>. Trust the "Live Now" column below over "Fill Effect"  -  Fill Effect is only a guess based on the fills currently loaded and can be wrong if older history isn\'t loaded (use "All" above to load full history for accurate matching).</div>';
+  html += '<div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Exec Price</th><th>Fee</th><th>P&amp;L</th><th>Fill Effect</th><th>Live Now</th><th>Time</th></tr>';
   rows.forEach(nf => {
     const pnlStr = nf.pnl==null ? '-' : Number(nf.pnl).toFixed(2);
     const pnlClass = nf.pnl==null ? '' : (nf.pnl>=0?'good':'bad');
-    html += '<tr><td>'+esc(nf.symbol)+'</td><td class="'+(nf.side==='buy'?'good':'bad')+'">'+esc(nf.side||'-')+'</td><td>'+(Number.isFinite(nf.size)?nf.size:'-')+'</td><td>'+(Number.isFinite(nf.price)?nf.price:'-')+'</td><td>'+(nf.fee||0).toFixed(4)+'</td><td class="'+pnlClass+'">'+pnlStr+'</td><td>'+esc(nf.status||'-')+'</td><td>'+esc(fmtDeltaTime(nf.time))+'</td></tr>';
+    const isLive = lastLiveOpenSymbols.has(nf.symbol.toUpperCase());
+    html += '<tr><td>'+esc(nf.symbol)+'</td><td class="'+(nf.side==='buy'?'good':'bad')+'">'+esc(nf.side||'-')+'</td><td>'+(Number.isFinite(nf.size)?nf.size:'-')+'</td><td>'+(Number.isFinite(nf.price)?nf.price:'-')+'</td><td>'+(nf.fee||0).toFixed(4)+'</td><td class="'+pnlClass+'">'+pnlStr+'</td><td>'+esc(nf.status||'-')+'</td><td class="'+(isLive?'good':'')+'">'+(isLive?'Yes':'No')+'</td><td>'+esc(fmtDeltaTime(nf.time))+'</td></tr>';
   });
   html += '</table></div>';
   html += '<div class="small" style="margin-top:8px"><a href="#" onclick="toggleDeltaRawDebug();return false">Not seeing execution price or P&amp;L correctly? Tap to view the raw fields Delta sent</a><div id="cDeltaRawDebug" style="display:none;margin-top:6px;white-space:pre-wrap;font-family:monospace;font-size:11px;max-height:240px;overflow:auto;background:#0d1527;padding:8px;border-radius:8px"></div></div>';
@@ -1327,12 +1338,12 @@ function downloadDeltaHistory(){
   if(!lastDeltaFillsAnnotated.length){ alert('Tap "Load Real History" first.'); return; }
   const rows = filteredDeltaFills();
   if(!rows.length){ alert('No fills match the current filters.'); return; }
-  const headers = ['symbol','side','size','exec_price','fee','pnl','status','time'];
+  const headers = ['symbol','side','size','exec_price','fee','pnl','fill_effect','live_on_delta_now','time'];
   const lines = [headers.join(',')];
   rows.forEach(nf => {
     const line = [
       nf.symbol||'', nf.side||'', Number.isFinite(nf.size)?nf.size:'', Number.isFinite(nf.price)?nf.price:'',
-      nf.fee||0, nf.pnl==null?'':Number(nf.pnl).toFixed(2), nf.status||'', fmtDeltaTime(nf.time)
+      nf.fee||0, nf.pnl==null?'':Number(nf.pnl).toFixed(2), nf.status||'', lastLiveOpenSymbols.has(nf.symbol.toUpperCase())?'yes':'no', fmtDeltaTime(nf.time)
     ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',');
     lines.push(line);
   });
