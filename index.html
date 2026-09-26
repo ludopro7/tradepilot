@@ -1206,6 +1206,41 @@ function fmtDeltaTime(v){
   return isNaN(d.getTime()) ? String(v) : d.toLocaleString('en-IN');
 }
 let lastDeltaFills = [];
+let lastDeltaFillsAnnotated = [];
+function normFill(f){
+  const symbol = f.product_symbol || f.symbol || (f.product && (f.product.symbol||f.product.product_symbol)) || '-';
+  const side = String(f.side || f.order_side || '-').toLowerCase();
+  const size = Number(f.size ?? f.filled_size ?? f.fill_size ?? f.quantity ?? f.qty ?? NaN);
+  const price = Number(f.price ?? f.fill_price ?? f.avg_fill_price ?? f.average_fill_price ?? f.filled_price ?? f.execution_price ?? NaN);
+  const fee = Number(f.commission ?? f.fee ?? f.trading_fee ?? f.taker_fee ?? f.maker_fee ?? 0);
+  const time = f.created_at ?? f.time ?? f.timestamp ?? null;
+  const apiPnl = f.pnl ?? f.realized_pnl ?? (f.meta_data && f.meta_data.pnl) ?? null;
+  return { symbol, side, size, price, fee, time, apiPnl, raw: f };
+}
+// FIFO-matches opposite-side fills per symbol to derive realized P&L and open/close status,
+// since a raw fill record on its own carries no P&L or position-lifecycle info.
+function computeFillsPnl(fills){
+  const chronological = [...fills].map(normFill).sort((a,b) => (Number(a.time)||0) - (Number(b.time)||0));
+  const books = {}; // symbol -> [{side, size, price}]
+  chronological.forEach(nf => {
+    if(!Number.isFinite(nf.size) || !Number.isFinite(nf.price) || nf.size<=0){ nf.pnl = nf.apiPnl; nf.status = 'UNKNOWN'; return; }
+    if(nf.apiPnl!=null){ nf.pnl = Number(nf.apiPnl); nf.status = nf.pnl!==0 ? 'CLOSE' : 'OPEN'; return; }
+    const book = books[nf.symbol] = books[nf.symbol] || [];
+    let remaining = nf.size, realized = 0, matched = false;
+    while(remaining > 1e-9 && book.length && book[0].side !== nf.side){
+      const lot = book[0];
+      const qty = Math.min(remaining, lot.size);
+      const dir = lot.side === 'buy' ? 1 : -1;
+      realized += qty * (nf.price - lot.price) * dir;
+      lot.size -= qty; remaining -= qty; matched = true;
+      if(lot.size <= 1e-9) book.shift();
+    }
+    if(remaining > 1e-9) book.push({side: nf.side, size: remaining, price: nf.price});
+    nf.pnl = matched ? realized : null;
+    nf.status = matched ? (remaining > 1e-9 ? 'CLOSE+OPEN' : 'CLOSE') : 'OPEN';
+  });
+  return chronological;
+}
 async function loadDeltaHistory(){
   const el = document.getElementById('cDeltaHistory');
   el.textContent = 'Loading your real fills from Delta...';
@@ -1219,6 +1254,7 @@ async function loadDeltaHistory(){
     if(!j.ok){ el.innerHTML = '<span class="warnbox">Delta did not return your history: '+esc(j.error||'unknown error')+'. Check your saved API credentials in Settings and try again.</span>'; return; }
     lastDeltaFills = j.fills || j.data || j.result || [];
     if(!lastDeltaFills.length){ el.textContent = 'No real fills found for this range on your Delta account.'; return; }
+    lastDeltaFillsAnnotated = computeFillsPnl(lastDeltaFills).reverse(); // most recent first
     renderDeltaHistoryTable();
   }catch(e){ el.innerHTML = '<span class="warnbox">Could not reach Delta right now. Try again in a moment.</span>'; }
 }
@@ -1226,41 +1262,46 @@ function filteredDeltaFills(){
   const side = (document.getElementById('dhSide')?.value || 'ALL').toLowerCase();
   const sym = (document.getElementById('dhSymbol')?.value || '').trim().toUpperCase();
   const executedOnly = document.getElementById('dhExecutedOnly')?.checked;
-  return lastDeltaFills.filter(f => {
-    if(executedOnly){
-      const state = String(f.state||f.fill_type||'filled').toLowerCase();
-      if(state.includes('cancel') || state.includes('reject')) return false;
-      if(!(f.size||f.filled_size)) return false;
-    }
-    if(side!=='all' && String(f.side||'').toLowerCase()!==side) return false;
-    if(sym && !String(f.product_symbol||f.symbol||'').toUpperCase().includes(sym)) return false;
+  return lastDeltaFillsAnnotated.filter(nf => {
+    if(executedOnly && !(Number.isFinite(nf.size) && nf.size>0)) return false;
+    if(side!=='all' && nf.side!==side) return false;
+    if(sym && !nf.symbol.toUpperCase().includes(sym)) return false;
     return true;
   });
 }
 function renderDeltaHistoryTable(){
   const el = document.getElementById('cDeltaHistory');
-  if(!lastDeltaFills.length){ return; }
+  if(!lastDeltaFillsAnnotated.length){ return; }
   const rows = filteredDeltaFills();
   if(!rows.length){ el.innerHTML = '<div class="small">No fills match the current filters.</div>'; return; }
-  let html = '<div class="small" style="margin-bottom:6px">'+rows.length+' of '+lastDeltaFills.length+' fill(s) shown, most recent first.</div><div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Price</th><th>Fee</th><th>Time</th></tr>';
-  rows.forEach(f => { html += '<tr><td>'+esc(f.product_symbol||f.symbol||'-')+'</td><td class="'+(String(f.side||'').toLowerCase()==='buy'?'good':'bad')+'">'+esc(f.side||'-')+'</td><td>'+esc(f.size??'-')+'</td><td>'+esc(f.price??'-')+'</td><td>'+esc(f.commission??'-')+'</td><td>'+esc(fmtDeltaTime(f.created_at||f.time))+'</td></tr>'; });
+  const totalPnl = rows.reduce((s,r) => s + (Number(r.pnl)||0), 0);
+  let html = '<div class="small" style="margin-bottom:6px">'+rows.length+' of '+lastDeltaFillsAnnotated.length+' fill(s) shown, most recent first. Net realized P&amp;L shown: <b class="'+(totalPnl>=0?'good':'bad')+'">'+totalPnl.toFixed(2)+'</b> (fees not subtracted)</div>';
+  html += '<div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Exec Price</th><th>Fee</th><th>P&amp;L</th><th>Status</th><th>Time</th></tr>';
+  rows.forEach(nf => {
+    const pnlStr = nf.pnl==null ? '-' : Number(nf.pnl).toFixed(2);
+    const pnlClass = nf.pnl==null ? '' : (nf.pnl>=0?'good':'bad');
+    html += '<tr><td>'+esc(nf.symbol)+'</td><td class="'+(nf.side==='buy'?'good':'bad')+'">'+esc(nf.side||'-')+'</td><td>'+(Number.isFinite(nf.size)?nf.size:'-')+'</td><td>'+(Number.isFinite(nf.price)?nf.price:'-')+'</td><td>'+(nf.fee||0).toFixed(4)+'</td><td class="'+pnlClass+'">'+pnlStr+'</td><td>'+esc(nf.status||'-')+'</td><td>'+esc(fmtDeltaTime(nf.time))+'</td></tr>';
+  });
   html += '</table></div>';
+  html += '<div class="small" style="margin-top:8px"><a href="#" onclick="toggleDeltaRawDebug();return false">Not seeing execution price or P&amp;L correctly? Tap to view the raw fields Delta sent</a><div id="cDeltaRawDebug" style="display:none;margin-top:6px;white-space:pre-wrap;font-family:monospace;font-size:11px;max-height:240px;overflow:auto;background:#0d1527;padding:8px;border-radius:8px"></div></div>';
   el.innerHTML = html;
 }
+function toggleDeltaRawDebug(){
+  const box = document.getElementById('cDeltaRawDebug');
+  if(!box) return;
+  if(box.style.display==='none'){ box.textContent = JSON.stringify(lastDeltaFills[0]||{}, null, 2); box.style.display='block'; }
+  else box.style.display='none';
+}
 function downloadDeltaHistory(){
-  if(!lastDeltaFills.length){ alert('Tap "Load Real History" first.'); return; }
+  if(!lastDeltaFillsAnnotated.length){ alert('Tap "Load Real History" first.'); return; }
   const rows = filteredDeltaFills();
   if(!rows.length){ alert('No fills match the current filters.'); return; }
-  const headers = ['symbol','side','size','price','commission','time'];
+  const headers = ['symbol','side','size','exec_price','fee','pnl','status','time'];
   const lines = [headers.join(',')];
-  rows.forEach(f => {
+  rows.forEach(nf => {
     const line = [
-      f.product_symbol||f.symbol||'',
-      f.side||'',
-      f.size??'',
-      f.price??'',
-      f.commission??'',
-      fmtDeltaTime(f.created_at||f.time)
+      nf.symbol||'', nf.side||'', Number.isFinite(nf.size)?nf.size:'', Number.isFinite(nf.price)?nf.price:'',
+      nf.fee||0, nf.pnl==null?'':Number(nf.pnl).toFixed(2), nf.status||'', fmtDeltaTime(nf.time)
     ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',');
     lines.push(line);
   });
