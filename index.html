@@ -1237,7 +1237,17 @@ function normFill(f){
   const time = f.created_at ?? f.time ?? f.timestamp ?? null;
   const timeMs = toEpochMs(time);
   const apiPnl = f.pnl ?? f.realized_pnl ?? (f.meta_data && f.meta_data.pnl) ?? null;
-  return { symbol, side, size, price, fee, time, timeMs, apiPnl, raw: f };
+  // Delta reports fill/order status under different keys depending on endpoint (state, order_status, status...).
+  const rawState = f.state ?? f.order_status ?? f.status ?? f.order_state ?? f.fill_state ?? null;
+  return { symbol, side, size, price, fee, time, timeMs, apiPnl, rawState, raw: f };
+}
+// Delta's "size" on a fill is a contract count, not raw underlying units (e.g. 1 BTCUSD contract
+// is typically 0.001 BTC) -- P&L must be multiplied by the product's real contract_value or it
+// comes out wildly inflated. deltaProducts is the same catalogue the Strategy/Scan tabs already load.
+function contractValueFor(symbol){
+  const p = deltaProducts.find(x => x.symbol === symbol);
+  const cv = p ? Number(p.contract_value) : NaN;
+  return Number.isFinite(cv) && cv > 0 ? cv : 1;
 }
 // FIFO-matches opposite-side fills per symbol to derive realized P&L and open/close status,
 // since a raw fill record on its own carries no P&L or position-lifecycle info.
@@ -1249,12 +1259,13 @@ function computeFillsPnl(fills){
     if(!Number.isFinite(nf.size) || !Number.isFinite(nf.price) || nf.size<=0){ nf.pnl = nf.apiPnl; nf.status = 'UNKNOWN'; return; }
     if(nf.apiPnl!=null){ nf.pnl = Number(nf.apiPnl); nf.status = nf.pnl!==0 ? 'CLOSE' : 'OPEN'; return; }
     const book = books[nf.symbol] = books[nf.symbol] || [];
+    const cv = contractValueFor(nf.symbol);
     let remaining = nf.size, realized = 0, matched = false;
     while(remaining > 1e-9 && book.length && book[0].side !== nf.side){
       const lot = book[0];
       const qty = Math.min(remaining, lot.size);
       const dir = lot.side === 'buy' ? 1 : -1;
-      realized += qty * (nf.price - lot.price) * dir;
+      realized += qty * (nf.price - lot.price) * dir * cv;
       lot.size -= qty; remaining -= qty; matched = true;
       if(lot.size <= 1e-9) book.shift();
     }
@@ -1277,6 +1288,7 @@ async function loadDeltaHistory(){
     const limitV = document.getElementById('dhLimit')?.value || '100';
     if(limitV === 'all'){ extra.fetch_all = true; extra.page_size = 250; }
     else extra.page_size = parseInt(limitV) || 100;
+    if(!deltaProducts.length){ try{ await loadDeltaProducts(); }catch(e){} }
     // Fetch your REAL current open positions too -- this is ground truth, unlike a fill
     // window (which may not go back far enough to see the fill that originally opened a
     // position, making it look "still open" here even though it's long since been closed).
@@ -1299,7 +1311,14 @@ function filteredDeltaFills(){
   const sym = (document.getElementById('dhSymbol')?.value || '').trim().toUpperCase();
   const executedOnly = document.getElementById('dhExecutedOnly')?.checked;
   return lastDeltaFillsAnnotated.filter(nf => {
-    if(executedOnly && !(Number.isFinite(nf.size) && nf.size>0)) return false;
+    if(executedOnly){
+      if(nf.rawState != null){
+        // Trust Delta's own status field when present -- only keep rows explicitly marked "filled".
+        if(String(nf.rawState).toLowerCase() !== 'filled') return false;
+      } else if(!(Number.isFinite(nf.size) && nf.size>0)){
+        return false;
+      }
+    }
     if(side!=='all' && nf.side!==side) return false;
     if(sym && !nf.symbol.toUpperCase().includes(sym)) return false;
     return true;
@@ -1319,9 +1338,9 @@ function renderDeltaHistoryTable(){
   html += '<div class="notice" style="margin-bottom:8px">Currently open on your real Delta account right now: <b>'+(lastLiveOpenSymbols.size ? [...lastLiveOpenSymbols].join(', ') : 'none')+'</b>. Trust the "Live Now" column below over "Fill Effect"  -  Fill Effect is only a guess based on the fills currently loaded and can be wrong if older history isn\'t loaded (use "All" above to load full history for accurate matching).</div>';
   html += '<div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Exec Price</th><th>Fee</th><th>P&amp;L</th><th>Fill Effect</th><th>Live Now</th><th>Time</th></tr>';
   rows.forEach(nf => {
-    const pnlStr = nf.pnl==null ? '-' : Number(nf.pnl).toFixed(2);
-    const pnlClass = nf.pnl==null ? '' : (nf.pnl>=0?'good':'bad');
     const isLive = lastLiveOpenSymbols.has(nf.symbol.toUpperCase());
+    const pnlStr = nf.pnl==null ? (isLive ? 'still open' : '-') : Number(nf.pnl).toFixed(2);
+    const pnlClass = nf.pnl==null ? '' : (nf.pnl>=0?'good':'bad');
     html += '<tr><td>'+esc(nf.symbol)+'</td><td class="'+(nf.side==='buy'?'good':'bad')+'">'+esc(nf.side||'-')+'</td><td>'+(Number.isFinite(nf.size)?nf.size:'-')+'</td><td>'+(Number.isFinite(nf.price)?nf.price:'-')+'</td><td>'+(nf.fee||0).toFixed(4)+'</td><td class="'+pnlClass+'">'+pnlStr+'</td><td>'+esc(nf.status||'-')+'</td><td class="'+(isLive?'good':'')+'">'+(isLive?'Yes':'No')+'</td><td>'+esc(fmtDeltaTime(nf.time))+'</td></tr>';
   });
   html += '</table></div>';
