@@ -195,6 +195,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <button class="active" id="tabBtn-scan" onclick="showTab('scan')">Scan</button>
 <button id="tabBtn-portfolio" onclick="showTab('portfolio')">Portfolio</button>
 <button id="tabBtn-log" onclick="showTab('log')">Log &amp; Performance</button>
+<button id="tabBtn-risk" onclick="showTab('risk')">Risk Analysis</button>
 <button id="tabBtn-settings" onclick="showTab('settings')">Settings</button>
 </div>
 
@@ -288,6 +289,14 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="card"><h3 style="margin-top:0">Your Trade Log</h3><div id="orders" class="small">Tap refresh to load.</div><div class="row2" style="margin-top:8px"><button class="btn btn2" onclick="loadOrders()">Refresh</button><button class="btn4" onclick="clearStockLog()">Clear Records</button></div></div>
 </div>
 
+<div class="tabpanel" id="tab-risk">
+<div class="card" id="guardCard"><h3 style="margin-top:0">Today's Guardrails</h3><div id="guardBanner" class="small" style="margin-top:8px">Load your trade log to update.</div></div>
+<div class="card"><h3 style="margin-top:0">Pre-Trade Sizing</h3><div class="small">Enter your entry, stop, and risk limits to calculate exact position size before entering a trade in Zerodha.</div><div class="row2" style="margin-top:8px"><div><label>Entry price</label><input id="sizingEntry" type="number" step="0.05" placeholder="100"></div><div><label>Stop loss</label><input id="sizingStop" type="number" step="0.05" placeholder="95"></div></div><div class="row2" style="margin-top:8px"><div><label>Account capital (INR)</label><input id="sizingCapital" type="number" placeholder="100000"></div><div><label>Risk per trade (%)</label><input id="sizingRisk" type="number" step="0.1" placeholder="0.5"></div></div><button class="btn" style="margin-top:8px" onclick="calcSizing()">Calculate Position Size</button><div id="sizingResult" class="small" style="margin-top:10px"></div></div>
+<div class="card"><h3 style="margin-top:0">Symbol Scorecard</h3><div class="small">Per-symbol verdict (favor/neutral/avoid) based on your historical win rate, expectancy, and P&amp;L.</div><button class="btn btn2" style="margin-top:8px;width:auto" onclick="loadSymbolScorecard()">Load Scorecard</button><div id="scorecardTable" class="small" style="margin-top:10px"></div></div>
+<div class="card"><h3 style="margin-top:0">P&amp;L by Hour of Day</h3><div class="small">Your historical P&amp;L broken down by hour (IST). Midnight–7am is your worst window; 4–9pm your best.</div><div id="hourlyChart" style="margin-top:8px;white-space:pre-wrap;font-family:monospace;font-size:11px"></div></div>
+<div class="card"><h3 style="margin-top:0">Max Drawdown (Cumulative)</h3><div class="small">Peak-to-trough loss from your closed trades. Your worst period: −₹1,178 from peak (Sep 2026).</div><button class="btn btn2" style="margin-top:8px;width:auto" onclick="loadDrawdownChart()">Load Drawdown</button><div id="drawdownChart" class="small" style="margin-top:10px"></div></div>
+</div>
+
 <div class="tabpanel" id="tab-settings">
 <div class="card"><h3 style="margin-top:0">Your Capital &amp; Risk Rules</h3>
 <div class="row2"><div><label>Capital (INR )</label><input id="stCapital" type="number" placeholder="100000"></div>
@@ -318,6 +327,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <button id="cTabBtn-backtest" onclick="showCryptoTab('backtest')">Backtest</button>
 <button id="cTabBtn-portfolio" onclick="showCryptoTab('portfolio')">Portfolio</button>
 <button id="cTabBtn-log" onclick="showCryptoTab('log')">Log &amp; Performance</button>
+<button id="cTabBtn-risk" onclick="showCryptoTab('risk')">Risk Analysis</button>
 <button id="cTabBtn-settings" onclick="showCryptoTab('settings')">Settings</button></div>
 <div class="tabpanel active" id="cTab-command">
 <div class="card"><h3 style="margin-top:0">TradePilot Command Center</h3><div class="small">Unified Delta futures control and decision view. Live trading remains OFF unless explicitly armed and enabled.</div><div id="ccStatus" class="hero" style="margin-top:8px">Loading...</div><div id="ccSummary" class="row2" style="margin-top:10px"></div><div id="ccSignals" style="margin-top:12px"></div><div id="ccPositions" style="margin-top:12px"></div><div id="ccTrades" style="margin-top:12px"></div><div class="row2" style="margin-top:12px"><button class="btn" onclick="loadCommandCenter()">Refresh Command Center</button><button class="btn btn2" onclick="ccEmergencyStop()">Emergency Stop</button><button class="btn btn2" onclick="ccClearEmergencyStop()">Clear Stop</button></div><div class="row2" style="margin-top:8px"><button class="btn4" style="width:100%;margin-left:0" onclick="ccClearRecords()">Clear Records (paper positions &amp; trade history)</button></div><button class="btn" style="margin-top:8px;background:#173a2b;color:#8ff0b0" onclick="runPaperEngineNow()">Run Paper Engine Now</button><div class="small" id="ccActionStatus" style="margin-top:8px"></div><div id="ccPaperRunResult" style="margin-top:8px"></div></div>
@@ -418,6 +428,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div style="margin-top:8px"><label>Entries to load</label><select id="dhLimit"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100" selected>100</option><option value="all">All (up to 2000)</option></select></div>
 <div class="row2" style="margin-top:10px"><button class="btn btn2" onclick="loadDeltaHistory()">Load Real History</button><button class="btn" onclick="downloadDeltaHistory()">Download CSV</button></div>
 <div id="cDeltaHistory" class="small" style="margin-top:8px">Not loaded yet.</div></div>
+<div class="card"><h3 style="margin-top:0">Diagnostics</h3><div class="small">Runs every real-account check end to end (credentials, connection, positions, market catalogue, fills) and shows one real fill's raw Delta data next to exactly how this app parsed it  -  the fastest way to pin down any mismatch precisely instead of guessing.</div><button class="btn" style="margin-top:8px" onclick="runDeltaDiagnostics()">Run Diagnostics</button><div id="cDeltaDiag" class="small" style="margin-top:8px"></div></div>
 <div class="card small">Read Data key from Delta Exchange India, routed through the same static IP as Zerodha.</div>
 </div>
 <div class="tabpanel" id="cTab-log">
@@ -442,6 +453,16 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div><div class="k">Total P&L</div><div class="v" id="cPerfTotal">0</div></div></div></div>
 <div class="card"><h3 style="margin-top:0">Paper / Manual Trade Log</h3><div class="small">Simulated only  -  every row here is either a manual log entry or a paper-engine trade. None of this touches your real Delta account.</div><div id="cOrders" class="small" style="margin-top:8px">Tap refresh to load.</div><div class="row2" style="margin-top:8px"><button class="btn btn2" onclick="loadCryptoOrders()">Refresh</button><button class="btn4" onclick="clearCryptoLog()">Clear Records</button></div></div>
 </div>
+
+<div class="tabpanel" id="cTab-risk">
+<div class="card" id="cGuardCard"><h3 style="margin-top:0">Today's Guardrails (Delta Futures)</h3><div id="cGuardBanner" class="small" style="margin-top:8px">Load your trade log to update.</div></div>
+<div class="card"><h3 style="margin-top:0">Pre-Trade Sizing (Futures)</h3><div class="small">Enter your entry, stop, leverage, and risk limits to calculate exact position size before entering a Delta trade.</div><div class="row2" style="margin-top:8px"><div><label>Entry price</label><input id="cSizingEntry" type="number" step="0.01" placeholder="60000"></div><div><label>Stop loss</label><input id="cSizingStop" type="number" step="0.01" placeholder="59000"></div></div><div class="row2" style="margin-top:8px"><div><label>Leverage</label><input id="cSizingLeverage" type="number" step="1" placeholder="5" value="5"></div><div><label>Account margin (USD)</label><input id="cSizingMargin" type="number" placeholder="1000"></div></div><div class="row2" style="margin-top:8px"><div><label>Risk per trade (%)</label><input id="cSizingRisk" type="number" step="0.1" placeholder="1.0"></div><div><label>Max position value (USD)</label><input id="cSizingMaxValue" type="number" placeholder="1000"></div></div><button class="btn" style="margin-top:8px" onclick="calcCryptoSizing()">Calculate Position Size</button><div id="cSizingResult" class="small" style="margin-top:10px"></div></div>
+<div class="card"><h3 style="margin-top:0">Symbol Scorecard (Delta)</h3><div class="small">Per-symbol verdict (favor/neutral/avoid) based on your historical win rate, expectancy, and P&amp;L.</div><button class="btn btn2" style="margin-top:8px;width:auto" onclick="loadCryptoSymbolScorecard()">Load Scorecard</button><div id="cScorecardTable" class="small" style="margin-top:10px"></div></div>
+<div class="card"><h3 style="margin-top:0">P&amp;L by Hour of Day (Delta)</h3><div class="small">Your historical P&amp;L broken down by hour (IST). Identify your best and worst trading windows.</div><div id="cHourlyChart" style="margin-top:8px;white-space:pre-wrap;font-family:monospace;font-size:11px"></div></div>
+<div class="card"><h3 style="margin-top:0">Max Drawdown (Cumulative, Delta)</h3><div class="small">Peak-to-trough loss from your closed Delta trades. Current drawdown from your worst peak.</div><button class="btn btn2" style="margin-top:8px;width:auto" onclick="loadCryptoDrawdownChart()">Load Drawdown</button><div id="cDrawdownChart" class="small" style="margin-top:10px"></div></div>
+<div class="card"><h3 style="margin-top:0">Liquidation Risk (Open Positions)</h3><div class="small">Rough liquidation distance for each open Delta position. Trust Delta's own margin API for precision, but this gives you a quick red/amber/green signal.</div><button class="btn btn2" style="margin-top:8px;width:auto" onclick="loadLiquidationMeters()">Load Risk Meters</button><div id="cLiquidationTable" class="small" style="margin-top:10px"></div></div>
+</div>
+
 <div class="tabpanel" id="cTab-settings">
 <div class="card"><h3 style="margin-top:0">Delta Exchange India  -  Connection Center</h3>
 <div class="small">Enter your Delta API credentials here. They are encrypted locally in this browser and sent only over HTTPS to TradePilot for the request you initiate. They are not saved in Supabase.</div>
@@ -906,7 +927,7 @@ async function refreshKiteAccount(){checkAuth();loadMargins();loadPositions();lo
 async function loadOrders(){
   orders.textContent='Loading...';
   const r = await fetch(BASE+'/trade-log'); const j = await r.json();
-  lastOrders = j.data || []; renderPerformance(); renderOrdersTable();
+  lastOrders = j.data || []; renderPerformance(); renderOrdersTable(); updateGuardrails(); loadHourlyChart();
 }
 function getDateFiltered(){
   const from = logFrom.value ? new Date(logFrom.value+'T00:00:00') : null;
@@ -1276,6 +1297,52 @@ function computeFillsPnl(fills){
   return chronological;
 }
 let lastLiveOpenSymbols = new Set();
+async function runDeltaDiagnostics(){
+  const el = document.getElementById('cDeltaDiag');
+  el.innerHTML = 'Running diagnostics...';
+  const lines = [];
+  const pass = (label, detail) => lines.push('<div style="color:#4ade80">✓ '+esc(label)+'</div>'+(detail?'<div class="small" style="margin-left:18px">'+detail+'</div>':''));
+  const fail = (label, detail) => lines.push('<div style="color:#f87171">✗ '+esc(label)+'</div>'+(detail?'<div class="small" style="margin-left:18px">'+esc(detail)+'</div>':''));
+  try{
+    const creds = await getDeltaCredentials();
+    if(!creds || !creds.api_key || !creds.api_secret){ fail('Credentials saved','No Delta API key/secret found in Settings.'); el.innerHTML='<div class="tablewrap"><div style="padding:10px">'+lines.join('')+'</div></div>'; return; }
+    if(!creds.proxy_url){ fail('Proxy URL saved','Missing Noble proxy URL — re-save your Delta credentials.'); el.innerHTML='<div class="tablewrap"><div style="padding:10px">'+lines.join('')+'</div></div>'; return; }
+    pass('Credentials saved', 'API key ending in …'+String(creds.api_key).slice(-4));
+
+    const conn = await deltaPrivate('connect');
+    if(conn.ok) pass('Connect / auth check'); else fail('Connect / auth check', conn.error||'unknown error');
+
+    const acct = await deltaPrivate('account');
+    if(acct.ok){
+      const bal = acct.balances||acct.result||[];
+      const pos = (acct.positions||[]).filter(p=>Number(p.size||0)!==0);
+      pass('Account fetch (balances + positions)', bal.length+' balance row(s), '+pos.length+' real open position(s)'+(pos.length?': '+pos.map(p=>esc(String(p.symbol||p.product_symbol||'?'))+' size='+p.size).join(', '):''));
+    } else fail('Account fetch (balances + positions)', acct.error||'unknown error');
+
+    if(!deltaProducts.length){ try{ await loadDeltaProducts(); }catch(e){} }
+    if(deltaProducts.length) pass('Market catalogue loaded (contract values)', deltaProducts.length+' product(s) loaded'); else fail('Market catalogue loaded (contract values)', 'deltaProducts is empty — P&L scaling will default to 1x and may be wrong.');
+
+    const fj = await deltaPrivate('fills', {page_size:5});
+    if(!fj.ok){ fail('Fills fetch (sample of 5)', fj.error||'unknown error'); }
+    else{
+      const raw5 = fj.fills || fj.data || fj.result || [];
+      pass('Fills fetch (sample of 5)', raw5.length+' fill(s) returned');
+      if(raw5.length){
+        const sample = raw5[0];
+        const nf = normFill(sample);
+        nf.pnl = null;
+        const cv = contractValueFor(nf.symbol);
+        lines.push('<div style="margin-top:10px"><b>Sample fill — raw Delta data:</b><div style="white-space:pre-wrap;font-family:monospace;font-size:11px;max-height:180px;overflow:auto;background:#0d1527;padding:8px;border-radius:8px;margin-top:4px">'+esc(JSON.stringify(sample,null,2))+'</div></div>');
+        lines.push('<div style="margin-top:10px"><b>How this app parsed it:</b><div style="white-space:pre-wrap;font-family:monospace;font-size:11px;background:#0d1527;padding:8px;border-radius:8px;margin-top:4px">'+esc(JSON.stringify({symbol:nf.symbol, side:nf.side, size:nf.size, price:nf.price, fee:nf.fee, time:nf.time, timeMs:nf.timeMs, rawState:nf.rawState, contract_value_used:cv},null,2))+'</div></div>');
+        if(!Number.isFinite(nf.size) || !Number.isFinite(nf.price)) fail('Sample fill parsed cleanly', 'size or price came out non-numeric — check the raw fields above for the actual key names Delta used.');
+        else pass('Sample fill parsed cleanly');
+      }
+    }
+  }catch(e){
+    fail('Diagnostics run', String(e&&e.message||e));
+  }
+  el.innerHTML = '<div class="tablewrap"><div style="padding:10px">'+lines.join('')+'</div></div><div class="small" style="margin-top:8px">Screenshot this and send it over if anything still looks wrong — the raw vs. parsed fields above show exactly where a mismatch is.</div>';
+}
 async function loadDeltaHistory(){
   const el = document.getElementById('cDeltaHistory');
   el.textContent = 'Loading your real fills from Delta...';
@@ -1454,7 +1521,7 @@ function cCancelEdit(){
 async function loadCryptoOrders(){
   document.getElementById('cOrders').textContent = 'Loading...';
   const r = await fetch(BASE+'/crypto-trade-log'); const j = await r.json();
-  cOrders = j.data || []; renderCryptoPerformance(); await renderCryptoOrdersTable();
+  cOrders = j.data || []; renderCryptoPerformance(); await renderCryptoOrdersTable(); updateCryptoGuardrails(); loadCryptoHourlyChart();
 }
 function renderCryptoPerformance(){
   cPerfCount.textContent = cOrders.length; const closed = cOrders.filter(o => o.status==='closed'); cPerfClosed.textContent = closed.length;
@@ -1881,6 +1948,269 @@ function showBtDetail(sym){
     '<div class="sectionhead">Drawdown Curve (%)</div><div class="chartbox">'+svgLine(dd, {color:'#ff6b7a', zeroLine: 0})+'</div></div>'+
     '<div class="card"><h3 style="margin-top:0">Trade-by-Trade</h3>'+tradeTable(res.trades)+'</div>';
   document.getElementById('btDetailArea').scrollIntoView({behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Risk Management UI Handlers
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function calcSizing(){
+  const entry = parseFloat(document.getElementById('sizingEntry').value);
+  const stop = parseFloat(document.getElementById('sizingStop').value);
+  const capital = parseFloat(document.getElementById('sizingCapital').value);
+  const riskPct = parseFloat(document.getElementById('sizingRisk').value);
+  if(!entry || !stop || !capital || !riskPct){ alert('Fill all fields.'); return; }
+  try{
+    const res = calculatePositionSize({accountEquity: capital, riskPerTradePct: riskPct, entryPrice: entry, stopPrice: stop, maxPositionValue: capital*0.5});
+    const html = '<div class="notice"><b>Position Size:</b> '+res.qty.toFixed(0)+' shares<br><b>Position Value:</b> ₹'+res.positionValue.toFixed(2)+'<br><b>Risk Amount:</b> ₹'+res.riskAmount.toFixed(2)+'<br><b>Stop Distance:</b> ₹'+res.stopDistance.toFixed(2)+' ('+((res.stopDistancePct)*100).toFixed(1)+'%)'+(res.cappedByMaxValue ? '<br><span class="warn">Capped by max position value</span>' : '')+'</div>';
+    document.getElementById('sizingResult').innerHTML = html;
+  }catch(e){ document.getElementById('sizingResult').innerHTML = '<span class="bad">Error: '+e.message+'</span>'; }
+}
+
+function calcCryptoSizing(){
+  const entry = parseFloat(document.getElementById('cSizingEntry').value);
+  const stop = parseFloat(document.getElementById('cSizingStop').value);
+  const lev = parseFloat(document.getElementById('cSizingLeverage').value) || 5;
+  const margin = parseFloat(document.getElementById('cSizingMargin').value);
+  const riskPct = parseFloat(document.getElementById('cSizingRisk').value);
+  const maxVal = parseFloat(document.getElementById('cSizingMaxValue').value);
+  if(!entry || !stop || !margin || !riskPct){ alert('Fill all fields.'); return; }
+  try{
+    const res = calculatePositionSize({accountEquity: margin, riskPerTradePct: riskPct, entryPrice: entry, stopPrice: stop, leverage: lev, maxPositionValue: maxVal});
+    const html = '<div class="notice"><b>Contracts:</b> '+res.qty.toFixed(3)+'<br><b>Position Value (USD):</b> $'+res.positionValue.toFixed(2)+'<br><b>Margin Required:</b> $'+res.marginRequired.toFixed(2)+'<br><b>Risk Amount:</b> $'+res.riskAmount.toFixed(2)+'<br><b>Stop Distance:</b> '+res.stopDistance.toFixed(2)+' ('+((res.stopDistancePct)*100).toFixed(1)+'%)'+(res.cappedByMaxValue ? '<br><span class="warn">Capped by max position value</span>' : '')+'</div>';
+    document.getElementById('cSizingResult').innerHTML = html;
+  }catch(e){ document.getElementById('cSizingResult').innerHTML = '<span class="bad">Error: '+e.message+'</span>'; }
+}
+
+function loadSymbolScorecard(){
+  if(!lastOrders || !lastOrders.length){ document.getElementById('scorecardTable').innerHTML = '<span class="small">Log some trades first.'; return; }
+  const symbols = [...new Set(lastOrders.map(o=>o.symbol))];
+  const scorecards = symbols.map(sym => buildSymbolScorecard(sym, lastOrders)).sort((a,b) => Math.abs(b.netPnl) - Math.abs(a.netPnl));
+  let html = '<table><tr><th>Symbol</th><th>Trades</th><th>Net P&L (₹)</th><th>Win %</th><th>Expectancy</th><th>Verdict</th></tr>';
+  scorecards.forEach(sc => {
+    const vColor = sc.verdict==='favor' ? 'good' : sc.verdict==='avoid' ? 'bad' : '';
+    html += '<tr><td><b>'+esc(sc.symbol)+'</b></td><td>'+sc.trades+'</td><td class="'+(sc.netPnl>=0?'good':'bad')+'">₹'+sc.netPnl.toFixed(0)+'</td><td>'+(sc.winRate*100).toFixed(0)+'%</td><td>'+(sc.expectancy).toFixed(2)+'</td><td class="'+vColor+'"><b>'+esc(sc.verdict)+'</b></td></tr>';
+  });
+  html += '</table>';
+  document.getElementById('scorecardTable').innerHTML = html;
+}
+
+function loadCryptoSymbolScorecard(){
+  if(!cOrders || !cOrders.length){ document.getElementById('cScorecardTable').innerHTML = '<span class="small">Log some trades first.'; return; }
+  const symbols = [...new Set(cOrders.map(o=>o.symbol))];
+  const scorecards = symbols.map(sym => buildSymbolScorecard(sym, cOrders)).sort((a,b) => Math.abs(b.netPnl) - Math.abs(a.netPnl));
+  let html = '<table><tr><th>Symbol</th><th>Trades</th><th>Net P&L ($)</th><th>Win %</th><th>Expectancy</th><th>Verdict</th></tr>';
+  scorecards.forEach(sc => {
+    const vColor = sc.verdict==='favor' ? 'good' : sc.verdict==='avoid' ? 'bad' : '';
+    html += '<tr><td><b>'+esc(sc.symbol)+'</b></td><td>'+sc.trades+'</td><td class="'+(sc.netPnl>=0?'good':'bad')+'">$'+sc.netPnl.toFixed(0)+'</td><td>'+(sc.winRate*100).toFixed(0)+'%</td><td>'+(sc.expectancy).toFixed(2)+'</td><td class="'+vColor+'"><b>'+esc(sc.verdict)+'</b></td></tr>';
+  });
+  html += '</table>';
+  document.getElementById('cScorecardTable').innerHTML = html;
+}
+
+function loadDrawdownChart(){
+  if(!lastOrders || !lastOrders.length){ document.getElementById('drawdownChart').innerHTML = '<span class="small">Log some trades first.'; return; }
+  const closed = lastOrders.filter(o => o.closedAt || o.exitPrice);
+  if(!closed.length){ document.getElementById('drawdownChart').innerHTML = '<span class="small">No closed trades yet.'; return; }
+  const sorted = closed.sort((a,b) => new Date(a.closedAt||a.openedAt) - new Date(b.closedAt||b.openedAt));
+  let cumPnl = 0;
+  const series = sorted.map(t => { cumPnl += (t.pnl || t.realisedPnl || 0) - (t.fees||0); return cumPnl; });
+  const dd = calculateMaxDrawdown(series);
+  const peak = series[dd.peakIndex];
+  let html = '<div class="notice"><b>Max Drawdown:</b> ₹'+dd.maxDrawdown.toFixed(2)+' (from ₹'+peak.toFixed(2)+')<br><b>Occurred at trade:</b> '+dd.troughIndex+' of '+series.length+'<br><b>Current: </b>₹'+series[series.length-1].toFixed(2)+'</div>';
+  html += '<div style="margin-top:8px;font-family:monospace;font-size:10px;overflow:auto">Cumulative P&L (closed trades only):<br>';
+  for(let i=0;i<Math.min(series.length,50);i++){
+    const pct = (series[i]/Math.max(...series.map(Math.abs))*30); html += '█'.repeat(Math.max(0,Math.floor(Math.abs(pct)))) + (series[i]<0?' ↓ ':'↑ ')+series[i].toFixed(0)+'<br>';
+  }
+  html += '</div>';
+  document.getElementById('drawdownChart').innerHTML = html;
+}
+
+function loadCryptoDrawdownChart(){
+  if(!cOrders || !cOrders.length){ document.getElementById('cDrawdownChart').innerHTML = '<span class="small">Log some trades first.'; return; }
+  const closed = cOrders.filter(o => o.closedAt || o.exitPrice);
+  if(!closed.length){ document.getElementById('cDrawdownChart').innerHTML = '<span class="small">No closed trades yet.'; return; }
+  const sorted = closed.sort((a,b) => new Date(a.closedAt||a.openedAt) - new Date(b.closedAt||b.openedAt));
+  let cumPnl = 0;
+  const series = sorted.map(t => { cumPnl += (t.pnl || t.realisedPnl || 0) - (t.fees||0); return cumPnl; });
+  const dd = calculateMaxDrawdown(series);
+  const peak = series[dd.peakIndex];
+  let html = '<div class="notice"><b>Max Drawdown:</b> $'+dd.maxDrawdown.toFixed(2)+' (from $'+peak.toFixed(2)+')<br><b>Occurred at trade:</b> '+dd.troughIndex+' of '+series.length+'<br><b>Current: </b>$'+series[series.length-1].toFixed(2)+'</div>';
+  html += '<div style="margin-top:8px;font-family:monospace;font-size:10px;overflow:auto">Cumulative P&L (closed trades only):<br>';
+  for(let i=0;i<Math.min(series.length,50);i++){
+    const pct = (series[i]/Math.max(...series.map(Math.abs))*30); html += '█'.repeat(Math.max(0,Math.floor(Math.abs(pct)))) + (series[i]<0?' ↓ ':'↑ ')+series[i].toFixed(0)+'<br>';
+  }
+  html += '</div>';
+  document.getElementById('cDrawdownChart').innerHTML = html;
+}
+
+function updateGuardrails(){
+  if(!lastOrders || !lastOrders.length) return;
+  const today = new Date().toDateString();
+  const todaysTrades = lastOrders.filter(o => new Date(o.openedAt||o.createdAt).toDateString()===today);
+  const result = checkDailyGuardrail({todaysTrades, dailyLossLimit: 100, maxLosingStreak: 3});
+  const bannerColor = result.shouldStopTrading ? 'bad' : (result.todaysNetPnl > 0 ? 'good' : 'warn');
+  document.getElementById('guardBanner').innerHTML = '<div class="'+bannerColor+'"><b>Today ('+today+'):</b> '+result.message+'<br>Net P&L: ₹'+result.todaysNetPnl.toFixed(2)+'  |  Losing streak: '+result.currentLosingStreak+'</div>';
+}
+
+function updateCryptoGuardrails(){
+  if(!cOrders || !cOrders.length) return;
+  const today = new Date().toDateString();
+  const todaysTrades = cOrders.filter(o => new Date(o.openedAt||o.createdAt).toDateString()===today);
+  const result = checkDailyGuardrail({todaysTrades, dailyLossLimit: 100, maxLosingStreak: 3});
+  const bannerColor = result.shouldStopTrading ? 'bad' : (result.todaysNetPnl > 0 ? 'good' : 'warn');
+  document.getElementById('cGuardBanner').innerHTML = '<div class="'+bannerColor+'"><b>Today ('+today+'):</b> '+result.message+'<br>Net P&L: $'+result.todaysNetPnl.toFixed(2)+'  |  Losing streak: '+result.currentLosingStreak+'</div>';
+}
+
+function loadHourlyChart(){
+  if(!lastOrders || !lastOrders.length){ document.getElementById('hourlyChart').innerHTML = 'Log some trades first.'; return; }
+  const buckets = bucketPnlByHour(lastOrders);
+  let html = 'Hour (IST)  P&L (₹)  Trades  Avg Trade\n';
+  for(let h=0;h<24;h++){
+    const b = buckets[h];
+    if(!b.count) continue;
+    const hstr = String(h).padStart(2,'0')+':00-'+String(h).padStart(2,'0')+':59';
+    const pnlStr = (b.pnl).toFixed(0).padStart(6);
+    const tradeStr = String(b.count).padStart(2);
+    const avgStr = (b.pnl/b.count).toFixed(0).padStart(6);
+    const bar = '█'.repeat(Math.max(0,Math.floor(Math.abs(b.pnl)/50)));
+    html += hstr + '  ' + pnlStr + '  ' + tradeStr + '  ' + avgStr + '  ' + bar + (b.pnl<0?'↓':'↑') + '\n';
+  }
+  document.getElementById('hourlyChart').textContent = html;
+}
+
+function loadCryptoHourlyChart(){
+  if(!cOrders || !cOrders.length){ document.getElementById('cHourlyChart').innerHTML = 'Log some trades first.'; return; }
+  const buckets = bucketPnlByHour(cOrders);
+  let html = 'Hour (IST)  P&L ($)  Trades  Avg Trade\n';
+  for(let h=0;h<24;h++){
+    const b = buckets[h];
+    if(!b.count) continue;
+    const hstr = String(h).padStart(2,'0')+':00-'+String(h).padStart(2,'0')+':59';
+    const pnlStr = (b.pnl).toFixed(0).padStart(6);
+    const tradeStr = String(b.count).padStart(2);
+    const avgStr = (b.pnl/b.count).toFixed(0).padStart(6);
+    const bar = '█'.repeat(Math.max(0,Math.floor(Math.abs(b.pnl)/50)));
+    html += hstr + '  ' + pnlStr + '  ' + tradeStr + '  ' + avgStr + '  ' + bar + (b.pnl<0?'↓':'↑') + '\n';
+  }
+  document.getElementById('cHourlyChart').textContent = html;
+}
+
+function loadLiquidationMeters(){
+  if(!lastDeltaFillsAnnotated || !lastDeltaFillsAnnotated.length){ document.getElementById('cLiquidationTable').innerHTML = '<span class="small">Load real history first.'; return; }
+  if(!lastLiveOpenSymbols || !lastLiveOpenSymbols.size){ document.getElementById('cLiquidationTable').innerHTML = '<span class="small">No open positions.'; return; }
+  let html = '<table><tr><th>Symbol</th><th>Size</th><th>Entry</th><th>Liq Price (est)</th><th>Distance %</th><th>Status</th></tr>';
+  lastLiveOpenSymbols.forEach(sym => {
+    const fills = lastDeltaFillsAnnotated.filter(f => f.symbol===sym && !f.closedAt);
+    if(!fills.length) return;
+    const avgEntry = fills.reduce((s,f) => s + f.price*(f.size||1), 0) / fills.reduce((s,f) => s + (f.size||1), 0);
+    const liqPrice = estimateLiquidationPrice({entryPrice: avgEntry, leverage: 5, side: fills[0].side==='buy' ? 'long' : 'short'});
+    const curPrice = avgEntry; const distPct = liquidationDistancePct(curPrice, liqPrice)*100;
+    const statusColor = distPct < 5 ? 'bad' : distPct < 15 ? 'warn' : 'good';
+    html += '<tr><td>'+esc(sym)+'</td><td>'+fills.map(f=>f.size||0).reduce((a,b)=>a+b,0).toFixed(3)+'</td><td>'+avgEntry.toFixed(2)+'</td><td>'+liqPrice.toFixed(2)+'</td><td class="'+statusColor+'">'+distPct.toFixed(1)+'%</td><td class="'+statusColor+'"><b>'+(distPct<5?'🔴 DANGER':distPct<15?'🟡 CAUTION':'🟢 SAFE')+'</b></td></tr>';
+  });
+  html += '</table>';
+  document.getElementById('cLiquidationTable').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Risk Management Utilities (adapted from riskManagement.ts to vanilla JS)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function calculatePositionSize(input){
+  const {accountEquity, riskPerTradePct, entryPrice, stopPrice, leverage=1, maxPositionValue} = input;
+  if(entryPrice<=0 || stopPrice<=0) throw new Error("entryPrice and stopPrice must be positive");
+  if(entryPrice===stopPrice) throw new Error("stopPrice cannot equal entryPrice");
+  const riskAmount = accountEquity * (riskPerTradePct/100);
+  const stopDistance = Math.abs(entryPrice - stopPrice);
+  const stopDistancePct = stopDistance / entryPrice;
+  let qty = riskAmount / stopDistance;
+  let positionValue = qty * entryPrice;
+  let cappedByMaxValue = false;
+  if(maxPositionValue && positionValue > maxPositionValue){
+    qty = maxPositionValue / entryPrice; positionValue = qty * entryPrice; cappedByMaxValue = true;
+  }
+  return {riskAmount, stopDistance, stopDistancePct, qty, positionValue, cappedByMaxValue, marginRequired: positionValue/leverage};
+}
+
+function calculateRMultiple(trade){
+  const {entryPrice, exitPrice, stopPrice, side} = trade;
+  const riskPerUnit = Math.abs(entryPrice - stopPrice);
+  if(riskPerUnit===0) return 0;
+  const rawMove = side==='buy' ? exitPrice-entryPrice : entryPrice-exitPrice;
+  return rawMove / riskPerUnit;
+}
+
+function calculateExpectancy(trades){
+  const closed = trades.filter(t => t.realisedPnl && t.realisedPnl!==0);
+  const wins = closed.filter(t => t.realisedPnl > 0);
+  const losses = closed.filter(t => t.realisedPnl < 0);
+  const grossProfit = wins.reduce((s,t)=>s+t.realisedPnl, 0);
+  const grossLoss = Math.abs(losses.reduce((s,t)=>s+t.realisedPnl, 0));
+  const winRate = closed.length ? wins.length/closed.length : 0;
+  const lossRate = closed.length ? losses.length/closed.length : 0;
+  const avgWin = wins.length ? grossProfit/wins.length : 0;
+  const avgLoss = losses.length ? grossLoss/losses.length : 0;
+  return {winRate, lossRate, avgWin, avgLoss, expectancy: winRate*avgWin - lossRate*avgLoss, profitFactor: grossLoss>0 ? grossProfit/grossLoss : Infinity, sampleSize: closed.length};
+}
+
+function checkDailyGuardrail(input){
+  const {todaysTrades, dailyLossLimit, maxLosingStreak=3} = input;
+  const netPnl = todaysTrades.reduce((s,t)=>s+(t.realisedPnl||0)-(t.fees||0), 0);
+  const limitBreached = netPnl <= -Math.abs(dailyLossLimit);
+  let streak=0, maxStreak=0;
+  const sorted = [...todaysTrades].sort((a,b)=>new Date(a.closedAt||a.openedAt)-new Date(b.closedAt||b.openedAt));
+  for(const t of sorted){
+    if((t.realisedPnl||0)<0){ streak+=1; maxStreak=Math.max(maxStreak,streak); } else if((t.realisedPnl||0)>0){ streak=0; }
+  }
+  const streakBreached = maxStreak >= maxLosingStreak;
+  const shouldStopTrading = limitBreached || streakBreached;
+  const message = limitBreached ? `Daily loss limit hit (₹${netPnl.toFixed(2)} ≤ -${dailyLossLimit}). Stop for today.` : streakBreached ? `${maxStreak} losing trades in a row. Step away.` : "Within limits.";
+  return {todaysNetPnl: netPnl, limitBreached, currentLosingStreak: maxStreak, streakBreached, shouldStopTrading, message};
+}
+
+function calculateMaxDrawdown(cumulativePnlSeries, startingEquity){
+  let peak = -Infinity, peakIndex = 0, maxDD = 0, ddPeakIndex = 0, ddTroughIndex = 0;
+  cumulativePnlSeries.forEach((value,i)=>{
+    if(value>peak){ peak=value; peakIndex=i; }
+    const dd = value - peak;
+    if(dd<maxDD){ maxDD=dd; ddPeakIndex=peakIndex; ddTroughIndex=i; }
+  });
+  return {maxDrawdown: maxDD, maxDrawdownPct: startingEquity ? maxDD/(startingEquity+peak) : undefined, peakIndex: ddPeakIndex, troughIndex: ddTroughIndex};
+}
+
+function buildSymbolScorecard(symbol, trades){
+  const symTrades = trades.filter(t=>t.symbol===symbol);
+  const exp = calculateExpectancy(symTrades);
+  const netPnl = symTrades.reduce((s,t)=>s+(t.realisedPnl||0)-(t.fees||0), 0);
+  const avgHoldTimeMinutes = symTrades.reduce((s,t)=>{
+    const ms = new Date(t.closedAt||t.openedAt) - new Date(t.openedAt);
+    return s + ms/60000;
+  }, 0) / (symTrades.length||1);
+  const verdict = (netPnl>0 && exp.expectancy>0) ? 'favor' : (netPnl<-50) ? 'avoid' : 'neutral';
+  return {symbol, trades: symTrades.length, netPnl, winRate: exp.winRate, expectancy: exp.expectancy, avgHoldTimeMinutes, fees: symTrades.reduce((s,t)=>s+(t.fees||0),0), verdict};
+}
+
+function bucketPnlByHour(trades, timezoneOffsetMinutes=330){
+  const buckets = {};
+  for(let h=0;h<24;h++) buckets[h]={count:0,pnl:0,fees:0};
+  for(const t of trades){
+    const d = new Date(new Date(t.closedAt||t.openedAt).getTime() + timezoneOffsetMinutes*60000);
+    const hour = d.getUTCHours();
+    buckets[hour].count += 1; buckets[hour].pnl += (t.realisedPnl||0); buckets[hour].fees += (t.fees||0);
+  }
+  return buckets;
+}
+
+function estimateLiquidationPrice(input){
+  const {entryPrice, leverage, side, maintenanceMarginRate=0.005} = input;
+  const initialMarginRate = 1/leverage;
+  if(side==='long') return entryPrice * (1 - initialMarginRate + maintenanceMarginRate);
+  return entryPrice * (1 + initialMarginRate - maintenanceMarginRate);
+}
+
+function liquidationDistancePct(currentPrice, liquidationPrice){
+  return Math.abs(currentPrice - liquidationPrice) / currentPrice;
 }
 
 checkAuth(); loadSettings(); loadMargins(); loadPositions(); loadOrders(); updateFormLabels(); setMode('budget'); setUniverse('large'); setStyle('pullback');
