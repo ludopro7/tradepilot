@@ -415,6 +415,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="row2" style="margin-top:8px"><div><label>Side</label><select id="dhSide" onchange="renderDeltaHistoryTable()"><option value="ALL">All</option><option value="buy">Buy only</option><option value="sell">Sell only</option></select></div><div><label>Symbol contains</label><input id="dhSymbol" placeholder="e.g. BTC" oninput="renderDeltaHistoryTable()"></div></div>
 <div class="togglerow" style="margin-top:8px"><div><b style="font-size:13px">Executed fills only</b><div class="small">Hides any non-fill/cancelled entries the API may include  -  on by default.</div></div>
 <label class="switch"><input type="checkbox" id="dhExecutedOnly" checked onchange="renderDeltaHistoryTable()"><span class="slider"></span></label></div>
+<div style="margin-top:8px"><label>Entries to load</label><select id="dhLimit"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100" selected>100</option><option value="all">All (up to 2000)</option></select></div>
 <div class="row2" style="margin-top:10px"><button class="btn btn2" onclick="loadDeltaHistory()">Load Real History</button><button class="btn" onclick="downloadDeltaHistory()">Download CSV</button></div>
 <div id="cDeltaHistory" class="small" style="margin-top:8px">Not loaded yet.</div></div>
 <div class="card small">Read Data key from Delta Exchange India, routed through the same static IP as Zerodha.</div>
@@ -1199,28 +1200,50 @@ async function loadCryptoPortfolio(){
     cPositions.innerHTML = html || 'No open positions.';
   }catch(e){ cBalances.innerHTML = '<span class="bad">Connect Delta Exchange India in Settings first.</span>'; }
 }
+// Robustly turns whatever timestamp shape Delta sends (unix seconds, ms, microseconds, or an
+// ISO date string) into a comparable epoch-ms number. Number(isoString) is NaN, which previously
+// made every fill compare "equal" and silently skipped the chronological sort entirely.
+function toEpochMs(v){
+  if(v==null || v==='') return 0;
+  const n = Number(v);
+  if(Number.isFinite(n)){
+    if(n > 1e15) return Math.floor(n/1000); // microseconds -> ms
+    if(n > 1e12) return n;                   // already ms
+    return n * 1000;                          // seconds -> ms
+  }
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
 function fmtDeltaTime(v){
   if(!v) return '-';
-  const n = Number(v);
-  const d = Number.isFinite(n) ? new Date(n > 1e12 ? n : n*1000) : new Date(v);
-  return isNaN(d.getTime()) ? String(v) : d.toLocaleString('en-IN');
+  const ms = toEpochMs(v);
+  if(!ms) return String(v);
+  return new Date(ms).toLocaleString('en-IN');
+}
+function normSide(s){
+  s = String(s||'').toLowerCase();
+  if(s.includes('buy') || s==='b' || s.includes('long')) return 'buy';
+  if(s.includes('sell') || s==='s' || s.includes('short')) return 'sell';
+  return s;
 }
 let lastDeltaFills = [];
 let lastDeltaFillsAnnotated = [];
 function normFill(f){
   const symbol = f.product_symbol || f.symbol || (f.product && (f.product.symbol||f.product.product_symbol)) || '-';
-  const side = String(f.side || f.order_side || '-').toLowerCase();
+  const side = normSide(f.side || f.order_side);
   const size = Number(f.size ?? f.filled_size ?? f.fill_size ?? f.quantity ?? f.qty ?? NaN);
   const price = Number(f.price ?? f.fill_price ?? f.avg_fill_price ?? f.average_fill_price ?? f.filled_price ?? f.execution_price ?? NaN);
   const fee = Number(f.commission ?? f.fee ?? f.trading_fee ?? f.taker_fee ?? f.maker_fee ?? 0);
   const time = f.created_at ?? f.time ?? f.timestamp ?? null;
+  const timeMs = toEpochMs(time);
   const apiPnl = f.pnl ?? f.realized_pnl ?? (f.meta_data && f.meta_data.pnl) ?? null;
-  return { symbol, side, size, price, fee, time, apiPnl, raw: f };
+  return { symbol, side, size, price, fee, time, timeMs, apiPnl, raw: f };
 }
 // FIFO-matches opposite-side fills per symbol to derive realized P&L and open/close status,
 // since a raw fill record on its own carries no P&L or position-lifecycle info.
+// Fills MUST be processed oldest-first for this to be correct, hence the explicit timeMs sort.
 function computeFillsPnl(fills){
-  const chronological = [...fills].map(normFill).sort((a,b) => (Number(a.time)||0) - (Number(b.time)||0));
+  const chronological = [...fills].map(normFill).sort((a,b) => a.timeMs - b.timeMs);
   const books = {}; // symbol -> [{side, size, price}]
   chronological.forEach(nf => {
     if(!Number.isFinite(nf.size) || !Number.isFinite(nf.price) || nf.size<=0){ nf.pnl = nf.apiPnl; nf.status = 'UNKNOWN'; return; }
@@ -1250,11 +1273,15 @@ async function loadDeltaHistory(){
     const toV = document.getElementById('dhTo').value;
     if(fromV) extra.start_time = Math.floor(new Date(fromV+'T00:00:00').getTime()) * 1000;
     if(toV) extra.end_time = Math.floor(new Date(toV+'T23:59:59').getTime()) * 1000;
+    const limitV = document.getElementById('dhLimit')?.value || '100';
+    if(limitV === 'all'){ extra.fetch_all = true; extra.page_size = 250; }
+    else extra.page_size = parseInt(limitV) || 100;
     const j = await deltaPrivate('fills', extra);
     if(!j.ok){ el.innerHTML = '<span class="warnbox">Delta did not return your history: '+esc(j.error||'unknown error')+'. Check your saved API credentials in Settings and try again.</span>'; return; }
     lastDeltaFills = j.fills || j.data || j.result || [];
     if(!lastDeltaFills.length){ el.textContent = 'No real fills found for this range on your Delta account.'; return; }
     lastDeltaFillsAnnotated = computeFillsPnl(lastDeltaFills).reverse(); // most recent first
+    if(j.truncated) lastDeltaFillsAnnotated._truncated = true;
     renderDeltaHistoryTable();
   }catch(e){ el.innerHTML = '<span class="warnbox">Could not reach Delta right now. Try again in a moment.</span>'; }
 }
@@ -1275,7 +1302,11 @@ function renderDeltaHistoryTable(){
   const rows = filteredDeltaFills();
   if(!rows.length){ el.innerHTML = '<div class="small">No fills match the current filters.</div>'; return; }
   const totalPnl = rows.reduce((s,r) => s + (Number(r.pnl)||0), 0);
-  let html = '<div class="small" style="margin-bottom:6px">'+rows.length+' of '+lastDeltaFillsAnnotated.length+' fill(s) shown, most recent first. Net realized P&amp;L shown: <b class="'+(totalPnl>=0?'good':'bad')+'">'+totalPnl.toFixed(2)+'</b> (fees not subtracted)</div>';
+  let html = '';
+  const allTimesZero = lastDeltaFillsAnnotated.every(nf => !nf.timeMs);
+  if(allTimesZero) html += '<div class="warnbox" style="margin-bottom:8px">Could not read a usable timestamp from any fill  -  Open/Closed status and P&amp;L below may be unreliable. Tap "view the raw fields" below and send it over so the time field can be mapped correctly.</div>';
+  if(lastDeltaFillsAnnotated._truncated) html += '<div class="small" style="margin-bottom:8px">Showing the first 2000 fills for this range  -  narrow the date range to see more.</div>';
+  html += '<div class="small" style="margin-bottom:6px">'+rows.length+' of '+lastDeltaFillsAnnotated.length+' fill(s) shown, most recent first. Net realized P&amp;L shown: <b class="'+(totalPnl>=0?'good':'bad')+'">'+totalPnl.toFixed(2)+'</b> (fees not subtracted)</div>';
   html += '<div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Exec Price</th><th>Fee</th><th>P&amp;L</th><th>Status</th><th>Time</th></tr>';
   rows.forEach(nf => {
     const pnlStr = nf.pnl==null ? '-' : Number(nf.pnl).toFixed(2);
