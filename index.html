@@ -285,7 +285,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div><label>To</label><input id="logTo" type="date" onchange="renderPerformance()"></div></div>
 <button class="btn3" style="margin-top:8px;width:auto" onclick="clearDateFilter()">Clear date filter</button>
 <div class="small" id="perfRangeNote" style="margin-top:8px"></div></div>
-<div class="card"><h3 style="margin-top:0">Your Trade Log</h3><div id="orders" class="small">Tap refresh to load.</div><button class="btn btn2" onclick="loadOrders()">Refresh</button></div>
+<div class="card"><h3 style="margin-top:0">Your Trade Log</h3><div id="orders" class="small">Tap refresh to load.</div><div class="row2" style="margin-top:8px"><button class="btn btn2" onclick="loadOrders()">Refresh</button><button class="btn4" onclick="clearStockLog()">Clear Records</button></div></div>
 </div>
 
 <div class="tabpanel" id="tab-settings">
@@ -320,7 +320,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <button id="cTabBtn-log" onclick="showCryptoTab('log')">Log &amp; Performance</button>
 <button id="cTabBtn-settings" onclick="showCryptoTab('settings')">Settings</button></div>
 <div class="tabpanel active" id="cTab-command">
-<div class="card"><h3 style="margin-top:0">TradePilot Command Center</h3><div class="small">Unified Delta futures control and decision view. Live trading remains OFF unless explicitly armed and enabled.</div><div id="ccStatus" class="hero" style="margin-top:8px">Loading...</div><div id="ccSummary" class="row2" style="margin-top:10px"></div><div id="ccSignals" style="margin-top:12px"></div><div id="ccPositions" style="margin-top:12px"></div><div id="ccTrades" style="margin-top:12px"></div><div class="row2" style="margin-top:12px"><button class="btn" onclick="loadCommandCenter()">Refresh Command Center</button><button class="btn btn2" onclick="ccEmergencyStop()">Emergency Stop</button><button class="btn btn2" onclick="ccClearEmergencyStop()">Clear Stop</button></div><button class="btn" style="margin-top:8px;background:#173a2b;color:#8ff0b0" onclick="runPaperEngineNow()">Run Paper Engine Now</button><div class="small" id="ccActionStatus" style="margin-top:8px"></div><div id="ccPaperRunResult" style="margin-top:8px"></div></div>
+<div class="card"><h3 style="margin-top:0">TradePilot Command Center</h3><div class="small">Unified Delta futures control and decision view. Live trading remains OFF unless explicitly armed and enabled.</div><div id="ccStatus" class="hero" style="margin-top:8px">Loading...</div><div id="ccSummary" class="row2" style="margin-top:10px"></div><div id="ccSignals" style="margin-top:12px"></div><div id="ccPositions" style="margin-top:12px"></div><div id="ccTrades" style="margin-top:12px"></div><div class="row2" style="margin-top:12px"><button class="btn" onclick="loadCommandCenter()">Refresh Command Center</button><button class="btn btn2" onclick="ccEmergencyStop()">Emergency Stop</button><button class="btn btn2" onclick="ccClearEmergencyStop()">Clear Stop</button></div><div class="row2" style="margin-top:8px"><button class="btn4" style="width:100%;margin-left:0" onclick="ccClearRecords()">Clear Records (paper positions &amp; trade history)</button></div><button class="btn" style="margin-top:8px;background:#173a2b;color:#8ff0b0" onclick="runPaperEngineNow()">Run Paper Engine Now</button><div class="small" id="ccActionStatus" style="margin-top:8px"></div><div id="ccPaperRunResult" style="margin-top:8px"></div></div>
 <div class="card"><h3 style="margin-top:0">Quick Symbol Focus</h3><div class="small">Type a symbol to see its live trade plan right now (entry / stop / target / qty), using your saved strategy settings. Optionally scope the bot to trade only that symbol from this point on.</div><input id="qsSymbol" placeholder="e.g. BTCUSD" style="margin-top:8px" onkeydown="if(event.key==='Enter')quickSymbolAnalyze()"><button class="btn" style="margin-top:8px" onclick="quickSymbolAnalyze()">Analyze &amp; Show Trade Plan</button><div id="qsResult" style="margin-top:10px"></div></div>
 <div class="card"><h3 style="margin-top:0">Best Symbols To Trade</h3><div class="small">Backtests your Top 25 symbols over 30d and 60d, keeps the ones consistently profitable in both, then ranks them by setup frequency  -  built for active manual scalping, so you can watch a real shortlist yourself rather than trade blind. Takes a minute or two.</div><button class="btn" style="margin-top:8px;background:#173a2b;color:#8ff0b0" onclick="findBestSymbols()">Find My Best Symbols</button><div id="bsStatus" class="small" style="margin-top:8px"></div><div id="bsResult" style="margin-top:8px"></div></div>
 </div>
@@ -407,8 +407,10 @@ input:checked + .slider:before{transform:translateX(20px)}
 </div>
 
 <div class="tabpanel" id="cTab-portfolio">
-<div class="card"><h3 style="margin-top:0">Wallet Balance</h3><div id="cBalances" class="small">Tap refresh to load.</div><button class="btn btn2" onclick="loadCryptoPortfolio()">Refresh</button></div>
-<div class="card"><h3 style="margin-top:0">Open Positions</h3><div id="cPositions" class="small"></div></div>
+<div class="card notice">This tab is your REAL Delta Exchange India account, read live via your API key. Nothing here is simulated. Paper/manual trades live only in the Log &amp; Performance tab and are never mixed in here.</div>
+<div class="card"><h3 style="margin-top:0">Wallet Balance (Real Account)</h3><div id="cBalances" class="small">Tap refresh to load.</div><button class="btn btn2" onclick="loadCryptoPortfolio()">Refresh</button></div>
+<div class="card"><h3 style="margin-top:0">Open Positions (Real Account)</h3><div id="cPositions" class="small"></div></div>
+<div class="card"><h3 style="margin-top:0">Real Delta Order/Trade History</h3><div class="small">Tries to pull your actual Delta fills via your API key. If your key or the backend doesn't support that yet, use the direct link to check on Delta's own site instead.</div><div id="cDeltaHistory" class="small" style="margin-top:8px">Not loaded yet.</div><div class="row2" style="margin-top:8px"><button class="btn btn2" onclick="loadDeltaHistory()">Load Real History</button><a class="btn" style="text-decoration:none;display:inline-block;text-align:center" href="https://india.delta.exchange/app/orders" target="_blank" rel="noopener">Open on Delta.exchange</a></div></div>
 <div class="card small">Read Data key from Delta Exchange India, routed through the same static IP as Zerodha.</div>
 </div>
 <div class="tabpanel" id="cTab-log">
@@ -431,7 +433,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div><div class="k">Closed</div><div class="v" id="cPerfClosed">0</div></div>
 <div><div class="k">Win rate</div><div class="v" id="cPerfWinRate"> - </div></div>
 <div><div class="k">Total P&L</div><div class="v" id="cPerfTotal">0</div></div></div></div>
-<div class="card"><h3 style="margin-top:0">Your Trade Log</h3><div id="cOrders" class="small">Tap refresh to load.</div><button class="btn btn2" onclick="loadCryptoOrders()">Refresh</button></div>
+<div class="card"><h3 style="margin-top:0">Paper / Manual Trade Log</h3><div class="small">Simulated only  -  every row here is either a manual log entry or a paper-engine trade. None of this touches your real Delta account.</div><div id="cOrders" class="small" style="margin-top:8px">Tap refresh to load.</div><div class="row2" style="margin-top:8px"><button class="btn btn2" onclick="loadCryptoOrders()">Refresh</button><button class="btn4" onclick="clearCryptoLog()">Clear Records</button></div></div>
 </div>
 <div class="tabpanel" id="cTab-settings">
 <div class="card"><h3 style="margin-top:0">Delta Exchange India  -  Connection Center</h3>
@@ -511,6 +513,21 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 function fmtNum(v){const n=Number(v);return Number.isFinite(n)?n.toLocaleString('en-IN',{maximumFractionDigits:2}):'—';}
 function renderCCSignals(a){if(!a.length)return '<div class="small">No actionable signals right now.</div>';return '<div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Score</th><th>Price</th><th>Quality</th></tr>'+a.slice(0,8).map(x=>'<tr><td>'+esc(x.symbol)+'</td><td>'+esc(x.signal)+'</td><td>'+fmtNum(x.score)+'</td><td>'+fmtNum(x.price)+'</td><td>'+esc(x.quality_tier||'—')+'</td></tr>').join('')+'</table></div>'; }
 function renderCCRows(a,empty){if(!a.length)return '<div class="small">'+empty+'</div>';return '<div class="tablewrap"><table><tr>'+Object.keys(a[0]).slice(0,8).map(k=>'<th>'+esc(k.replaceAll('_',' '))+'</th>').join('')+'</tr>'+a.slice(0,8).map(x=>'<tr>'+Object.keys(a[0]).slice(0,8).map(k=>'<td>'+esc(x[k])+'</td>').join('')+'</tr>').join('')+'</table></div>'; }
+async function ccClearRecords(){
+  const el=document.getElementById('ccActionStatus');
+  try{
+    const r = await fetch(BASE+'/crypto-trade-log'); const j = await r.json();
+    const rows = j.data || [];
+    if(!rows.length){ alert('No paper trade records to clear.'); return; }
+    if(!confirm('Permanently delete all '+rows.length+' paper trade record(s) (open + closed)? This cannot be undone.')) return;
+    let failed = 0;
+    for(const row of rows){
+      try{ const dr = await fetch(BASE+'/crypto-trade-log?id='+row.id, {method:'DELETE'}); if(!dr.ok) failed++; }catch(e){ failed++; }
+    }
+    if(el) el.textContent = failed ? (rows.length-failed)+' of '+rows.length+' cleared, '+failed+' failed.' : 'All paper records cleared.';
+    loadCommandCenter();
+  }catch(e){ if(el) el.textContent = 'Could not reach backend to clear records.'; }
+}
 async function ccEmergencyStop(){await ccControl({emergency_stop:true});}
 async function ccClearEmergencyStop(){await ccControl({emergency_stop:false});}
 async function ccControl(body){const el=document.getElementById('ccActionStatus');try{const r=await fetch(BASE+'/crypto-trading-control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'Control failed');el.textContent='Control updated.';loadCommandCenter();}catch(e){el.textContent=e.message;}}
@@ -935,6 +952,17 @@ async function deleteEntry(id){
   if(!confirm('Delete this log entry?')) return;
   try{ const r = await fetch(BASE+'/trade-log?id='+id, {method:'DELETE'}); if(r.ok){ loadOrders(); } else { alert('Could not delete.'); } }catch(e){ alert('Could not reach backend.'); }
 }
+async function clearStockLog(){
+  if(!lastOrders.length){ alert('Nothing to clear — tap Refresh first.'); return; }
+  if(!confirm('Permanently delete all '+lastOrders.length+' logged trade(s)? This cannot be undone.')) return;
+  const ids = lastOrders.map(o => o.id);
+  let failed = 0;
+  for(const id of ids){
+    try{ const r = await fetch(BASE+'/trade-log?id='+id, {method:'DELETE'}); if(!r.ok) failed++; }catch(e){ failed++; }
+  }
+  await loadOrders();
+  alert(failed ? (ids.length-failed)+' of '+ids.length+' deleted. '+failed+' failed — tap Clear Records again to retry.' : 'Trade log cleared.');
+}
 function syncInvested(){ const q=parseFloat(qty.value||'0'), p=parseFloat(price.value||'0'); if(q&&p) invested.value=(q*p).toFixed(0); }
 function updateFormLabels(){
   if(side.value==='BUY'){ lblPrice.textContent='Buy Price'; lblSL.textContent='Stop Loss (sell if hit)'; lblTarget.textContent='Target'; }
@@ -1165,6 +1193,20 @@ async function loadCryptoPortfolio(){
     cPositions.innerHTML = html || 'No open positions.';
   }catch(e){ cBalances.innerHTML = '<span class="bad">Connect Delta Exchange India in Settings first.</span>'; }
 }
+async function loadDeltaHistory(){
+  const el = document.getElementById('cDeltaHistory');
+  el.textContent = 'Loading...';
+  try{
+    const j = await deltaPrivate('fills');
+    if(!j.ok){ el.innerHTML = '<span class="warnbox">Not available from here yet ('+(j.error||'backend does not support this action')+'). Use "Open on Delta.exchange" to see your real order/trade history directly.</span>'; return; }
+    const rows = j.fills || j.data || j.result || [];
+    if(!rows.length){ el.textContent = 'No fills returned.'; return; }
+    let html = '<div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Price</th><th>Time</th></tr>';
+    rows.slice(0,50).forEach(f => { html += '<tr><td>'+esc(f.product_symbol||f.symbol||'-')+'</td><td>'+esc(f.side||'-')+'</td><td>'+esc(f.size??'-')+'</td><td>'+esc(f.price??'-')+'</td><td>'+esc(f.created_at||f.time||'-')+'</td></tr>'; });
+    html += '</table></div>';
+    el.innerHTML = html;
+  }catch(e){ el.innerHTML = '<span class="warnbox">Could not reach Delta. Use "Open on Delta.exchange" instead.</span>'; }
+}
 async function runCryptoScan(){
   cScanState.textContent = 'Scanning...'; cScanResults.innerHTML = ''; cTicketCard.style.display = 'none';
   lastCryptoScan = []; let offset = 0, totalErrors = 0, minScoreSeen = null, safety = 0;
@@ -1310,6 +1352,17 @@ function cEditEntry(id){
 async function cDeleteEntry(id){
   if(!confirm('Delete this log entry?')) return;
   try{ const r = await fetch(BASE+'/crypto-trade-log?id='+id, {method:'DELETE'}); if(r.ok){ loadCryptoOrders(); } else { alert('Could not delete.'); } }catch(e){ alert('Could not reach backend.'); }
+}
+async function clearCryptoLog(){
+  if(!cOrders.length){ alert('Nothing to clear — tap Refresh first.'); return; }
+  if(!confirm('Permanently delete all '+cOrders.length+' paper/manual trade(s)? This cannot be undone and will also clear them from the Command Center.')) return;
+  const ids = cOrders.map(o => o.id);
+  let failed = 0;
+  for(const id of ids){
+    try{ const r = await fetch(BASE+'/crypto-trade-log?id='+id, {method:'DELETE'}); if(!r.ok) failed++; }catch(e){ failed++; }
+  }
+  await loadCryptoOrders();
+  alert(failed ? (ids.length-failed)+' of '+ids.length+' deleted. '+failed+' failed — tap Clear Records again to retry.' : 'Paper/manual trade log cleared.');
 }
 
 /* ---- Delta Connection Center + dynamic market universe ---- */
