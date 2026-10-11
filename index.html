@@ -61,7 +61,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 .marketbanner.up{background:#173a2b;color:#8ff0b0;border:1px solid #2a6b47}
 .marketbanner.down{background:#3a1f1f;color:#ff9ba6;border:1px solid #6b2a2a}
 .marketbanner.flat{background:#1c2945;color:#9aa8c2;border:1px solid #334463}
-
 .ticket{background:#fff;color:#111827;border-radius:14px;padding:16px;margin-top:10px}
 .ticket-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .ticket-symbol{font-size:20px;font-weight:800}
@@ -88,14 +87,12 @@ input:checked + .slider:before{transform:translateX(20px)}
 .liveresult{margin-top:10px;padding:10px;border-radius:8px;font-size:13px}
 .liveresult.ok{background:#173a2b;color:#8ff0b0}
 .liveresult.err{background:#3a1f1f;color:#ff9ba6}
-
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:flex-start;justify-content:center;padding:12px;overflow-y:auto}
 .modal-overlay.open{display:flex}
 .modal-box{background:#121a2e;border-radius:16px;padding:12px;width:100%;max-width:700px;margin-top:30px}
 .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .modal-close{background:#1c2945;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
 #chartContainer{width:100%;height:420px;border-radius:10px;overflow:hidden}
-
 .topbar{position:sticky;top:0;z-index:20;background:#0b1020;padding:12px 0 0}
 .brand{display:flex;justify-content:space-between;align-items:center;padding:4px 0 10px;max-width:700px;margin:auto}
 .brand b{font-size:17px}
@@ -104,7 +101,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 .tabbar button.active{background:#e8eefc;color:#101827}
 .tabpanel{display:none}
 .tabpanel.active{display:block}
-
 .appswitch{display:flex;gap:6px;max-width:700px;margin:auto;padding:0 16px 10px}
 .appswitch button{flex:1;padding:12px;border-radius:12px;border:2px solid #334463;background:#0d1527;color:#9aa8c2;font-weight:800;font-size:14px;cursor:pointer}
 .appswitch button.active.stocks{background:#173a2b;color:#8ff0b0;border-color:#2a6b47}
@@ -113,7 +109,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 .explainbox b{color:#eef2ff}
 .liqwarn{background:#3a1f1f;border:1px solid #6b2a2a;color:#ff9ba6}
 .notconfigured{background:#2a1420;border-left:4px solid #ff6b7a;padding:12px;border-radius:10px;font-size:13px}
-
 .scancard{background:#0d1527;border:1px solid #263454;border-radius:14px;padding:12px;margin-bottom:10px}
 .scancard.conf-low{border-color:#5c3a1f}
 .scancard.conf-medium{border-color:#5c5a1f}
@@ -167,7 +162,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 .bestbox{background:#173a2b;border:1px solid #2a6b47;border-radius:10px;padding:10px;margin-top:8px;font-size:12px;color:#8ff0b0}
 .worstbox{background:#3a1f1f;border:1px solid #6b2a2a;border-radius:10px;padding:10px;margin-top:8px;font-size:12px;color:#ff9ba6}
 </style></head><body>
-
 <div class="topbar">
 <div class="wrap" style="padding-top:0">
 <div class="loginbanner" id="loginBanner">
@@ -187,9 +181,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 <button id="appBtn-crypto" onclick="setApp('crypto')">Crypto  Crypto Futures</button>
 </div>
 </div>
-
 <div class="wrap">
-
 <div id="app-stocks">
 <div class="tabbar">
 <button class="active" id="tabBtn-scan" onclick="showTab('scan')">Scan</button>
@@ -198,7 +190,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 <button id="tabBtn-risk" onclick="showTab('risk')">Risk Analysis</button>
 <button id="tabBtn-settings" onclick="showTab('settings')">Settings</button>
 </div>
-
 <div class="tabpanel active" id="tab-scan">
 <div class="card"><h3 style="margin-top:0">Search a Stock</h3>
 <div class="small">Look up any NSE stock directly for analysis  -  not just the fixed scan list below.</div>
@@ -208,7 +199,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 </div>
 <div id="searchResult" style="margin-top:10px"></div>
 </div>
-
 <div class="card"><h3 style="margin-top:0">Scanner</h3>
 <div class="small">Free delayed data. <b>Tap any stock name to see its candle chart right here.</b></div>
 <div class="marketbanner" id="marketBanner" style="display:none"></div>
@@ -251,14 +241,12 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="small">You can log this manually, OR place it for real on Zerodha directly below.</div>
 <div id="ticketBody"></div></div>
 </div>
-
 <div class="tabpanel" id="tab-portfolio">
 <div class="card"><h3 style="margin-top:0">Margins</h3><div id="margins" class="small">Tap refresh to load.</div><button class="btn btn2" onclick="loadMargins()">Refresh</button></div>
 <div class="card"><h3 style="margin-top:0">Open Positions</h3><div id="positions" class="small">Tap refresh to load.</div><button class="btn btn2" onclick="loadPositions()">Refresh</button></div>
 <div class="card"><h3 style="margin-top:0">Holdings</h3><div id="holdings" class="small">Tap refresh to load.</div><button class="btn btn2" onclick="loadHoldings()">Refresh</button></div>
 <div class="card small">For full past history, use Zerodha's Console -> Reports -> Tradebook/P&L.</div>
 </div>
-
 <div class="tabpanel" id="tab-log">
 <div class="card" id="orderCard"><h3 style="margin-top:0">Log a Trade</h3>
 <div id="editBanner" style="display:none" class="editbanner">Editing an existing entry. <button class="btn3" onclick="cancelEdit()">Cancel edit</button></div>
@@ -288,7 +276,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="small" id="perfRangeNote" style="margin-top:8px"></div></div>
 <div class="card"><h3 style="margin-top:0">Your Trade Log</h3><div id="orders" class="small">Tap refresh to load.</div><div class="row2" style="margin-top:8px"><button class="btn btn2" onclick="loadOrders()">Refresh</button><button class="btn4" onclick="clearStockLog()">Clear Records</button></div></div>
 </div>
-
 <div class="tabpanel" id="tab-risk">
 <div class="card" id="guardCard"><h3 style="margin-top:0">Today's Guardrails</h3><div id="guardBanner" class="small" style="margin-top:8px">Load your trade log to update.</div></div>
 <div class="card"><h3 style="margin-top:0">Pre-Trade Sizing</h3><div class="small">Enter your entry, stop, and risk limits to calculate exact position size before entering a trade in Zerodha.</div><div class="row2" style="margin-top:8px"><div><label>Entry price</label><input id="sizingEntry" type="number" step="0.05" placeholder="100"></div><div><label>Stop loss</label><input id="sizingStop" type="number" step="0.05" placeholder="95"></div></div><div class="row2" style="margin-top:8px"><div><label>Account capital (INR)</label><input id="sizingCapital" type="number" placeholder="100000"></div><div><label>Risk per trade (%)</label><input id="sizingRisk" type="number" step="0.1" placeholder="0.5"></div></div><button class="btn" style="margin-top:8px" onclick="calcSizing()">Calculate Position Size</button><div id="sizingResult" class="small" style="margin-top:10px"></div></div>
@@ -296,7 +283,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="card"><h3 style="margin-top:0">P&amp;L by Hour of Day</h3><div class="small">Your historical P&amp;L broken down by hour (IST). Midnight–7am is your worst window; 4–9pm your best.</div><div id="hourlyChart" style="margin-top:8px;white-space:pre-wrap;font-family:monospace;font-size:11px"></div></div>
 <div class="card"><h3 style="margin-top:0">Max Drawdown (Cumulative)</h3><div class="small">Peak-to-trough loss from your closed trades. Your worst period: −₹1,178 from peak (Sep 2026).</div><button class="btn btn2" style="margin-top:8px;width:auto" onclick="loadDrawdownChart()">Load Drawdown</button><div id="drawdownChart" class="small" style="margin-top:10px"></div></div>
 </div>
-
 <div class="tabpanel" id="tab-settings">
 <div class="card"><h3 style="margin-top:0">Your Capital &amp; Risk Rules</h3>
 <div class="row2"><div><label>Capital (INR )</label><input id="stCapital" type="number" placeholder="100000"></div>
@@ -319,7 +305,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="card small">Live orders route through a static-IP proxy, automatically as AMO outside market hours or regular intraday during market hours. Note: brokerage, STT, and other charges apply to every real trade and can eat a large share of small profits  -  factor that in, especially on small position sizes.</div>
 </div>
 </div>
-
 <div id="app-crypto" style="display:none">
 <div class="tabbar">
 <button class="active" id="cTabBtn-command" onclick="showCryptoTab('command')">Command Center</button><button class="" id="cTabBtn-scan" onclick="showCryptoTab('scan')">Scan</button>
@@ -334,7 +319,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="card"><h3 style="margin-top:0">Quick Symbol Focus</h3><div class="small">Type a symbol to see its live trade plan right now (entry / stop / target / qty), using your saved strategy settings. Optionally scope the bot to trade only that symbol from this point on.</div><input id="qsSymbol" placeholder="e.g. BTCUSD" style="margin-top:8px" onkeydown="if(event.key==='Enter')quickSymbolAnalyze()"><button class="btn" style="margin-top:8px" onclick="quickSymbolAnalyze()">Analyze &amp; Show Trade Plan</button><div id="qsResult" style="margin-top:10px"></div></div>
 <div class="card"><h3 style="margin-top:0">Best Symbols To Trade</h3><div class="small">Backtests your Top 25 symbols over 30d and 60d, keeps the ones consistently profitable in both, then ranks them by setup frequency  -  built for active manual scalping, so you can watch a real shortlist yourself rather than trade blind. Takes a minute or two.</div><button class="btn" style="margin-top:8px;background:#173a2b;color:#8ff0b0" onclick="findBestSymbols()">Find My Best Symbols</button><div id="bsStatus" class="small" style="margin-top:8px"></div><div id="bsResult" style="margin-top:8px"></div></div>
 </div>
-
 <div class="tabpanel" id="cTab-scan">
 <div class="card"><h3 style="margin-top:0">Crypto Futures Scanner  -  Delta Exchange India</h3>
 <div class="small">Public data, updates 24/7. Thresholds come from your live strategy config  -  edit them in the Strategy tab.</div>
@@ -345,29 +329,24 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div id="cScanResults" style="margin-top:12px"></div></div>
 <div class="card" id="cTicketCard" style="display:none"><h3 style="margin-top:0">Trade Plan</h3><div id="cTicketBody"></div></div>
 </div>
-
 <div class="tabpanel" id="cTab-strategy">
 <div class="card"><h3 style="margin-top:0">Strategy Control Center</h3>
 <div class="small" id="stratNameLine">Loading current strategy...</div>
 <div class="togglerow"><div><b style="font-size:13px">Strategy Enabled</b><div class="small">Turns signal generation on/off. Never places live orders either way.</div></div>
 <label class="switch"><input type="checkbox" id="stratEnabled"><span class="slider"></span></label></div>
-
 <div class="sectionhead">Market universe</div>
 <div class="row2"><div><label>Universe</label><select id="cryptoUniverse" onchange="applyCryptoUniverse()"><option value="all">All live perpetuals</option><option value="top10">Top 10 by turnover</option><option value="top25">Top 25 by turnover</option><option value="top50">Top 50 by turnover</option><option value="manual">Manual selection</option></select></div><div><label>Search markets</label><input id="cryptoSymbolSearch" placeholder="BTC, ETH, SOL..." oninput="filterCryptoSymbols()"></div></div>
 <div class="small" id="cryptoUniverseStatus">Loading Delta Exchange India market catalogue...</div>
 <div class="symgrid" id="symGrid"></div>
-<div class="sectionhead">Market Timeframe</div>
+<div class="sectionhead">Chart Timeframe</div>
 <div class="row2">
-  <div>
-    <label>Chart Timeframe</label>
-    <select id="pTimeframe">
-      <option value="5m">5 Minutes (Scalping)</option>
-      <option value="15m">15 Minutes (Intraday)</option>
-      <option value="1h" selected>1 Hour (Swing - Recommended)</option>
-      <option value="4h">4 Hours (Position)</option>
-      <option value="1d">1 Day (Long-term)</option>
-    </select>
-  </div>
+  <div><label>Timeframe</label><select id="pTimeframe">
+    <option value="5m">5 Minutes (Scalping)</option>
+    <option value="15m">15 Minutes (Intraday)</option>
+    <option value="1h" selected>1 Hour (Swing - Recommended)</option>
+    <option value="4h">4 Hours (Position)</option>
+    <option value="1d">1 Day (Long-term)</option>
+  </select></div>
   <div></div>
 </div>
 <div class="sectionhead">Trend (EMA)</div>
@@ -376,16 +355,13 @@ input:checked + .slider:before{transform:translateX(20px)}
   <div><label>EMA slow</label><input id="pEmaSlow" type="number"></div>
   <div><label>EMA trend (57)</label><input id="pEmaTrend" type="number"></div>
 </div>
-
 <div class="sectionhead">Momentum (RSI)</div>
 <div class="row2"><div><label>RSI period</label><input id="pRsiPeriod" type="number"></div><div></div></div>
 <div class="row2"><div><label>RSI long range min</label><input id="pRsiLongMin" type="number"></div><div><label>RSI long range max</label><input id="pRsiLongMax" type="number"></div></div>
 <div class="row2"><div><label>RSI short range min</label><input id="pRsiShortMin" type="number"></div><div><label>RSI short range max</label><input id="pRsiShortMax" type="number"></div></div>
-
 <div class="sectionhead">Stop / Target (ATR)</div>
 <div class="row2"><div><label>ATR period</label><input id="pAtrPeriod" type="number"></div><div><label>Stop = N x ATR</label><input id="pStopAtr" type="number" step="0.1"></div></div>
 <div class="row2"><div><label>Reward:Risk</label><input id="pRR" type="number" step="0.1"></div><div><label>Breakout lookback (bars)</label><input id="pBreakoutBars" type="number"></div></div>
-
 <div class="sectionhead">Confirmation gates</div>
 <div class="row2"><div><label>Minimum score (of 9)</label><input id="eMinScore" type="number" min="0" max="9"></div><div><label>Minimum ADX</label><input id="eMinAdx" type="number"></div></div>
 <div><label>Volume multiplier (x average)</label><input id="pVolMult" type="number" step="0.1"></div>
@@ -395,7 +371,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 <label class="switch"><input type="checkbox" id="eReqVol"><span class="slider"></span></label></div>
 <div class="togglerow"><div><b style="font-size:13px">Require breakout confirmation</b></div>
 <label class="switch"><input type="checkbox" id="eReqBreakout"><span class="slider"></span></label></div>
-
 <div class="sectionhead">Risk &amp; execution limits</div>
 <div class="hardcap">LOCK <b>Hard rule:</b> risk per trade can never be saved above <b>2%</b>, no matter what you enter here  -  it will be silently capped server-side.</div>
 <div class="row2"><div><label>Max risk per trade (%)</label><input id="eMaxRisk" type="number" step="0.1" max="2"></div><div><label>Default leverage</label><input id="eDefaultLev" type="number"></div></div>
@@ -403,13 +378,11 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="row2"><div><label>Max open positions</label><input id="eMaxOpenPos" type="number"></div><div><label>Max correlated positions</label><input id="eMaxCorrelated" type="number"></div></div>
 <div class="row2"><div><label>Max daily loss (%)</label><input id="eMaxDailyLoss" type="number" step="0.1"></div><div><label>Cooldown after a trade (minutes)</label><input id="eCooldown" type="number"></div></div>
 <div class="row2"><div><label>Allow LONG</label><select id="eAllowLong"><option value="true">Yes</option><option value="false">No</option></select></div><div><label>Allow SHORT</label><select id="eAllowShort"><option value="true">Yes</option><option value="false">No</option></select></div></div>
-
 <button class="btn" style="margin-top:16px" onclick="saveStrategyConfig()">Save Strategy Config</button>
 <div id="stratSaveResult" style="margin-top:8px"></div>
 </div>
 <div class="card small">Changes here affect the Scan tab immediately  -  the scanner always reads the live config, never hardcoded values. This never places real orders; it only changes what counts as a valid signal.</div>
 </div>
-
 <div class="tabpanel" id="cTab-backtest">
 <div class="card"><h3 style="margin-top:0">Backtest Center</h3>
 <div class="small">Simulation only  -  uses real historical Delta candles, but never places any real order. Uses the same live Strategy Control Center configuration as the scanner.</div>
@@ -432,7 +405,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 </div>
 <div id="btResults"></div>
 </div>
-
 <div class="tabpanel" id="cTab-portfolio">
 <div class="card notice">This tab is your REAL Delta Exchange India account, read live via your API key. Nothing here is simulated. Paper/manual trades live only in the Log &amp; Performance tab and are never mixed in here.</div>
 <div class="card"><h3 style="margin-top:0">Wallet Balance (Real Account)</h3><div id="cBalances" class="small">Tap refresh to load.</div><button class="btn btn2" onclick="loadCryptoPortfolio()">Refresh</button></div>
@@ -470,7 +442,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div><div class="k">Total P&L</div><div class="v" id="cPerfTotal">0</div></div></div></div>
 <div class="card"><h3 style="margin-top:0">Paper / Manual Trade Log</h3><div class="small">Simulated only  -  every row here is either a manual log entry or a paper-engine trade. None of this touches your real Delta account.</div><div id="cOrders" class="small" style="margin-top:8px">Tap refresh to load.</div><div class="row2" style="margin-top:8px"><button class="btn btn2" onclick="loadCryptoOrders()">Refresh</button><button class="btn4" onclick="clearCryptoLog()">Clear Records</button></div></div>
 </div>
-
 <div class="tabpanel" id="cTab-risk">
 <div class="card" id="cGuardCard"><h3 style="margin-top:0">Today's Guardrails (Delta Futures)</h3><div id="cGuardBanner" class="small" style="margin-top:8px">Load your trade log to update.</div></div>
 <div class="card"><h3 style="margin-top:0">Pre-Trade Sizing (Futures)</h3><div class="small">Enter your entry, stop, leverage, and risk limits to calculate exact position size before entering a Delta trade.</div><div class="row2" style="margin-top:8px"><div><label>Entry price</label><input id="cSizingEntry" type="number" step="0.01" placeholder="60000"></div><div><label>Stop loss</label><input id="cSizingStop" type="number" step="0.01" placeholder="59000"></div></div><div class="row2" style="margin-top:8px"><div><label>Leverage</label><input id="cSizingLeverage" type="number" step="1" placeholder="5" value="5"></div><div><label>Account margin (USD)</label><input id="cSizingMargin" type="number" placeholder="1000"></div></div><div class="row2" style="margin-top:8px"><div><label>Risk per trade (%)</label><input id="cSizingRisk" type="number" step="0.1" placeholder="1.0"></div><div><label>Max position value (USD)</label><input id="cSizingMaxValue" type="number" placeholder="1000"></div></div><button class="btn" style="margin-top:8px" onclick="calcCryptoSizing()">Calculate Position Size</button><div id="cSizingResult" class="small" style="margin-top:10px"></div></div>
@@ -479,7 +450,6 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="card"><h3 style="margin-top:0">Max Drawdown (Cumulative, Delta)</h3><div class="small">Peak-to-trough loss from your closed Delta trades. Current drawdown from your worst peak.</div><button class="btn btn2" style="margin-top:8px;width:auto" onclick="loadCryptoDrawdownChart()">Load Drawdown</button><div id="cDrawdownChart" class="small" style="margin-top:10px"></div></div>
 <div class="card"><h3 style="margin-top:0">Liquidation Risk (Open Positions)</h3><div class="small">Rough liquidation distance for each open Delta position. Trust Delta's own margin API for precision, but this gives you a quick red/amber/green signal.</div><button class="btn btn2" style="margin-top:8px;width:auto" onclick="loadLiquidationMeters()">Load Risk Meters</button><div id="cLiquidationTable" class="small" style="margin-top:10px"></div></div>
 </div>
-
 <div class="tabpanel" id="cTab-settings">
 <div class="card"><h3 style="margin-top:0">Delta Exchange India  -  Connection Center</h3>
 <div class="small">Enter your Delta API credentials here. They are encrypted locally in this browser and sent only over HTTPS to TradePilot for the request you initiate. They are not saved in Supabase.</div>
@@ -502,14 +472,11 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="card small">This capital number is for informational position sizing here. Risk per trade is hard-capped at 2% server-side in the Strategy Control Center, regardless of any value stored anywhere. Futures with leverage carry real risk of losing more than your margin and forced liquidation.</div>
 </div>
 </div>
-
 </div>
-
 <div class="modal-overlay" id="chartModal">
   <div class="modal-box"><div class="modal-head"><b id="chartTitle">Chart</b><button class="modal-close" onclick="closeChart()">Close</button></div>
   <div id="chartContainer"></div><div class="small" style="margin-top:8px">Free delayed chart.</div></div>
 </div>
-
 <script>
 const BASE = "https://qsborukxsupytozkatlk.supabase.co/functions/v1";
 const DELTA_CRED_DB = "TradePilotLocalSecrets";
@@ -519,6 +486,7 @@ let mySettings = { capital: 100000, max_risk_per_trade_pct: 0.5 };
 let sizingMode = 'budget'; let universe = 'large'; let entryStyle = 'pullback';
 let editingId = null; let lastOrders = []; let tvWidgetLoaded = false; let currentTicket = null;
 let lastMarketTrend = 'FLAT'; let prevScanMap = {}; let prevScanTime = null; let currentApp = 'stocks';
+let stratData = null; let execData = null;
 
 function setApp(app){
   currentApp = app;
@@ -530,7 +498,6 @@ function setApp(app){
   window.scrollTo({top:0});
   if(app==='crypto') loadCommandCenter();
 }
-
 function showTab(name){
   document.querySelectorAll('#app-stocks .tabpanel').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('#app-stocks .tabbar button').forEach(el => el.classList.remove('active'));
@@ -564,7 +531,7 @@ async function ccClearRecords(){
     const r = await fetch(BASE+'/crypto-trade-log'); const j = await r.json();
     const rows = j.data || [];
     if(!rows.length){ alert('No paper trade records to clear.'); return; }
-    if(!confirm('Permanently delete all '+rows.length+' paper trade record(s) (open + closed)? This cannot be undone.')) return;
+    if(!confirm('Permanently delete all '+rows.length+' paper trade record(s)?')) return;
     let failed = 0;
     for(const row of rows){
       try{ const dr = await fetch(BASE+'/crypto-trade-log?id='+row.id, {method:'DELETE'}); if(!dr.ok) failed++; }catch(e){ failed++; }
@@ -585,17 +552,11 @@ async function runPaperEngineNow(){
     if(j.halted){ resEl.innerHTML='<div class="warnbox">Halted: '+(j.message||'Emergency stop or daily loss limit active.')+'</div>'; return; }
     const opened=j.opened||[], closed=j.closed||[], rejected=j.rejected||[];
     let html='<div class="notice">Ran successfully.'+(j.checkedAt?' Checked at '+new Date(j.checkedAt).toLocaleTimeString():'')+'</div>';
-    html+='<div class="small" style="margin-top:6px">Opened: '+opened.length+'  |  Closed: '+closed.length+'  |  Rejected candidates: '+rejected.length+'  |  Active positions: '+(j.activePositions??'?')+'</div>';
-    if(opened.length){ html+='<div class="small good" style="margin-top:4px">Opened: '+opened.map(o=>o.symbol+' '+o.side).join(', ')+'</div>'; }
-    if(closed.length){ html+='<div class="small" style="margin-top:4px">Closed: '+closed.map(c=>c.symbol+' ('+(c.reason||'').split('|').pop()+', P&L '+Number(c.pnl||0).toFixed(2)+')').join(', ')+'</div>'; }
-    if(rejected.length){ html+='<div class="small" style="margin-top:4px;color:#9aa8c2">Rejected: '+rejected.slice(0,5).map(x=>x.symbol+' ('+x.reason+')').join(', ')+(rejected.length>5?' +'+(rejected.length-5)+' more':'')+'</div>'; }
-    if(!opened.length && !closed.length && !rejected.length){ html+='<div class="small" style="margin-top:4px">No eligible signals found in the last 10 minutes  -  this is expected if the signal generator upstream hasn\'t written anything recently.</div>'; }
+    html+='<div class="small" style="margin-top:6px">Opened: '+opened.length+'  |  Closed: '+closed.length+'  |  Rejected: '+rejected.length+'  |  Active: '+(j.activePositions??'?')+'</div>';
     resEl.innerHTML=html;
     loadCommandCenter();
   }catch(e){ resEl.innerHTML='<div class="errbox">Could not reach paper engine.</div>'; }
 }
-
-/* ---- Quick Symbol Focus (live analysis + single-symbol paper focus) ---- */
 function qsEma(a,n){const o=Array(a.length).fill(NaN);let start=-1;for(let s=0;s<=a.length-n;s++){let ok=true;for(let k=0;k<n;k++){if(!Number.isFinite(a[s+k])){ok=false;break;}}if(ok){start=s;break;}}if(start<0)return o;let e=0;for(let k=0;k<n;k++)e+=a[start+k];e/=n;o[start+n-1]=e;const k=2/(n+1);for(let i=start+n;i<a.length;i++){if(!Number.isFinite(a[i])){e=NaN;o[i]=NaN;continue;}if(!Number.isFinite(e)){o[i]=NaN;continue;}e=a[i]*k+e*(1-k);o[i]=e}return o}
 function qsRsi(a,n){const o=Array(a.length).fill(NaN);if(a.length<=n)return o;let g=0,l=0;for(let i=1;i<=n;i++){const d=a[i]-a[i-1];g+=Math.max(d,0);l+=Math.max(-d,0)}g/=n;l/=n;o[n]=l?100-100/(1+g/l):100;for(let i=n+1;i<a.length;i++){const d=a[i]-a[i-1];g=(g*(n-1)+Math.max(d,0))/n;l=(l*(n-1)+Math.max(-d,0))/n;o[i]=l?100-100/(1+g/l):100}return o}
 function qsAtr(c,n){const o=Array(c.length).fill(NaN),tr=Array(c.length).fill(0);for(let i=1;i<c.length;i++)tr[i]=Math.max(c[i].high-c[i].low,Math.abs(c[i].high-c[i-1].close),Math.abs(c[i].low-c[i-1].close));if(c.length<=n)return o;let s=0;for(let i=1;i<=n;i++)s+=tr[i];o[n]=s/n;for(let i=n+1;i<c.length;i++)o[i]=(o[i-1]*(n-1)+tr[i])/n;return o}
@@ -615,7 +576,7 @@ async function fetchLivePrice(sym){
 async function computeLiveTradePlan(sym){
   if(!deltaProducts.length) await loadDeltaProducts();
   const prod=deltaProducts.find(p=>p.symbol===sym);
-  if(!prod) return {ok:false, reason:sym+' not found in the live Delta market catalogue  -  check the symbol spelling.'};
+  if(!prod) return {ok:false, reason:sym+' not found in the live Delta market catalogue.'};
   if(!stratData || !execData) return {ok:false, reason:'Strategy config not loaded yet  -  try again in a moment.'};
   const endT=Math.floor(Date.now()/1000), startT=endT-5*86400;
   let r;
@@ -628,27 +589,29 @@ async function computeLiveTradePlan(sym){
   candles=candles.filter(c=>[c.open,c.high,c.low,c.close].every(Number.isFinite));
   if(candles.length<120) return {ok:false, reason:'Not enough clean recent candle history for '+sym+' yet.'};
   const p=stratData.parameters||{}, e2=execData||{};
-  const pp={ema_fast:Number(p.ema_fast)||20, ema_slow:Number(p.ema_slow)||50, rsi_period:Number(p.rsi_period)||14,
+  const pp={ema_fast:Number(p.ema_fast)||20, ema_slow:Number(p.ema_slow)||50, ema_trend:Number(p.ema_trend)||57, rsi_period:Number(p.rsi_period)||14,
     rsi_long_min:Number(p.rsi_long_min)||50, rsi_long_max:Number(p.rsi_long_max)||75, rsi_short_min:Number(p.rsi_short_min)||25, rsi_short_max:Number(p.rsi_short_max)||50,
     atr_period:Number(p.atr_period)||14, stop_atr_multiplier:Number(p.stop_atr_multiplier)||1, reward_risk:Number(p.reward_risk)||2,
     breakout_bars:Number(p.breakout_bars)||12, volume_multiplier:Number(p.volume_multiplier)||1.2};
   const closes=candles.map(x=>x.close);
-  const ef=qsEma(closes,pp.ema_fast), es=qsEma(closes,pp.ema_slow), rs=qsRsi(closes,pp.rsi_period), at=qsAtr(candles,pp.atr_period),
+  const ef=qsEma(closes,pp.ema_fast), es=qsEma(closes,pp.ema_slow), et=qsEma(closes,pp.ema_trend), rs=qsRsi(closes,pp.rsi_period), at=qsAtr(candles,pp.atr_period),
     ad=qsAdx(candles), mc=qsMacd(closes), vr=qsVol(candles), bo=qsBreak(candles,pp.breakout_bars);
   let i=candles.length-1;
-  const isValid=(idx)=>[ef[idx],es[idx],rs[idx],at[idx],ad[idx],mc[idx],vr[idx],bo.hi[idx],bo.lo[idx]].every(Number.isFinite);
+  const isValid=(idx)=>[ef[idx],es[idx],et[idx],rs[idx],at[idx],ad[idx],mc[idx],vr[idx],bo.hi[idx],bo.lo[idx]].every(Number.isFinite);
   const latestIdx=i;
   while(i>=0 && i>latestIdx-20 && !isValid(i)) i--;
-  if(i<0 || !isValid(i)) return {ok:false, reason:sym+' doesn\'t have enough clean recent data for these indicators yet  -  this can happen on lower-liquidity symbols with gaps in their candle history. Try again later or pick a more actively traded symbol.'};
+  if(i<0 || !isValid(i)) return {ok:false, reason:sym+' doesn\'t have enough clean recent data for these indicators yet.'};
   const staleCandles=latestIdx-i;
   const long=ef[i]>es[i];
+  const trendPass = long ? candles[i].close > et[i] : candles[i].close < et[i];
   const mo=long?mc[i]>0:mc[i]<0;
   const ro=long?(rs[i]>=pp.rsi_long_min&&rs[i]<=pp.rsi_long_max):(rs[i]>=pp.rsi_short_min&&rs[i]<=pp.rsi_short_max);
   const vo=vr[i]>=pp.volume_multiplier;
   const br=long?candles[i].close>bo.hi[i]:candles[i].close<bo.lo[i];
   const minAdx=Number(e2.min_adx)||20, minScore=Number(e2.min_signal_score)||7;
-  let score=2; if(ro)score+=2; if(mo)score+=2; if(ad[i]>=minAdx)score++; if(vo)score++; if(br)score+=2;
-  const tradable=score>=minScore && ad[i]>=minAdx && (!e2.require_macd_confirmation||mo) && (!e2.require_volume_confirmation||vo) && (!e2.require_breakout_confirmation||br) && (long?e2.allow_long!==false:e2.allow_short!==false);
+  let score=2; if(trendPass)score+=2; if(ro)score+=2; if(mo)score+=2; if(ad[i]>=minAdx)score++; if(vo)score++; if(br)score+=2;
+  score=Math.min(score,9);
+  const tradable=score>=minScore && trendPass && ad[i]>=minAdx && (!e2.require_macd_confirmation||mo) && (!e2.require_volume_confirmation||vo) && (!e2.require_breakout_confirmation||br) && (long?e2.allow_long!==false:e2.allow_short!==false);
   const entry=candles[i].close;
   const dist=at[i]*pp.stop_atr_multiplier;
   const stop=long?entry-dist:entry+dist;
@@ -660,7 +623,7 @@ async function computeLiveTradePlan(sym){
   let qty=Math.min(dist?riskAmt/(dist*cv):0, maxNotional/(entry*cv), (maxMargin*leverage)/(entry*cv));
   qty=Math.floor(qty/lot)*lot; if(qty<minOrder)qty=0;
   const margin=qty>0 ? (qty*entry*cv)/leverage : 0;
-  return {ok:true, symbol:sym, long, score, tradable, entry, stop, target, qty, adx:ad[i], leverage, margin, staleCandles, droppedCandles:rawCount-candles.length};
+  return {ok:true, symbol:sym, long, score, tradable, entry, stop, target, qty, adx:ad[i], leverage, margin, staleCandles, droppedCandles:rawCount-candles.length, trendPass};
 }
 async function quickSymbolAnalyze(){
   const sym=(document.getElementById('qsSymbol').value||'').trim().toUpperCase();
@@ -670,19 +633,18 @@ async function quickSymbolAnalyze(){
   let res;
   try{ res=await computeLiveTradePlan(sym); }catch(e){ res={ok:false, reason:(e.message||'unknown error')}; }
   if(!res.ok){ resEl.innerHTML='<div class="errbox">Could not analyze '+sym+'  -  '+res.reason+'</div>'; return; }
-  const staleNote=res.staleCandles>0 ? '<div class="warnbox">Note: '+sym+'\'s most recent candle'+(res.staleCandles>1?'s had gaps':' had a gap')+' in the data, so this plan uses the latest clean reading  -  about '+(res.staleCandles*5)+' minutes old, not the live price.</div>' : '';
-  const droppedNote=res.droppedCandles>0 ? '<div class="warnbox">'+res.droppedCandles+' candle(s) from the exchange feed had missing price data and were skipped so they couldn\'t distort this reading.</div>' : '';
-  let html='<div class="notice">'+sym+'  -  '+(res.long?'LONG bias':'SHORT bias')+', score '+res.score+'/9'+(res.tradable?'  -  tradable now':'  -  not tradable yet')+'.</div>'+droppedNote+staleNote;
+  let html='<div class="notice">'+sym+'  -  '+(res.long?'LONG bias':'SHORT bias')+', score '+res.score+'/9'+(res.tradable?'  -  tradable now':'  -  not tradable yet')+'.</div>';
   html+='<div class="grid" style="margin-top:8px">'+
     '<div><div class="k">Side</div><div class="v">'+(res.long?'LONG':'SHORT')+'</div></div>'+
+    '<div><div class="k">EMA Trend Pass</div><div class="v '+(res.trendPass?'good':'bad')+'">'+(res.trendPass?'YES':'NO')+'</div></div>'+
     '<div><div class="k">Limit Entry</div><div class="v">'+res.entry.toFixed(4)+'</div></div>'+
     '<div><div class="k">Stop Loss</div><div class="v bad">'+res.stop.toFixed(4)+'</div></div>'+
     '<div><div class="k">Target</div><div class="v good">'+res.target.toFixed(4)+'</div></div>'+
-    '<div><div class="k">Qty (contracts)</div><div class="v">'+res.qty.toFixed(4)+'</div></div>'+
+    '<div><div class="k">Qty</div><div class="v">'+res.qty.toFixed(4)+'</div></div>'+
     '<div><div class="k">Margin</div><div class="v">'+res.margin.toFixed(2)+'</div></div>'+
     '<div><div class="k">ADX</div><div class="v">'+res.adx.toFixed(1)+'</div></div></div>';
-  if(!res.tradable){ html+='<div class="warnbox">Doesn\'t clear your saved thresholds yet  -  shown anyway so you can see where it stands.</div>'; }
-  if(res.qty<=0){ html+='<div class="errbox">Computed quantity rounds to zero at your current capital/risk settings  -  this size can\'t actually be traded.</div>'; }
+  if(!res.tradable){ html+='<div class="warnbox">Doesn\'t clear your saved thresholds yet.</div>'; }
+  if(res.qty<=0){ html+='<div class="errbox">Computed quantity rounds to zero at your current settings.</div>'; }
   html+='<button class="btn" style="margin-top:10px;background:#173a2b;color:#8ff0b0" onclick=\'startSymbolFocus("'+sym+'")\'>Start Paper Test on '+sym+' Only</button>';
   resEl.innerHTML=html;
 }
@@ -692,17 +654,7 @@ async function startSymbolFocus(sym){
     const body={enabled:true, universe:'manual', symbols:[sym], timeframe: stratData?stratData.timeframe:'5m', parameters: stratData.parameters, execution: execData};
     const r=await fetch(BASE+'/crypto-strategy-config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
     const j=await r.json();
-    if(r.ok){ resEl.innerHTML+='<div class="notice" style="margin-top:8px">Bot is now focused on '+sym+' only  -  the paper engine will only ever act on this symbol until you change it back in the Strategy tab.</div>'; loadStrategyConfig(); }
-    else{ resEl.innerHTML+='<div class="errbox" style="margin-top:8px">'+(j.error||'Could not update strategy focus.')+'</div>'; }
-  }catch(e){ resEl.innerHTML+='<div class="errbox" style="margin-top:8px">Could not reach backend.</div>'; }
-}
-async function startSymbolsFocus(symbolsArr, targetElId){
-  const resEl=document.getElementById(targetElId||'qsResult');
-  try{
-    const body={enabled:true, universe:'manual', symbols:symbolsArr, timeframe: stratData?stratData.timeframe:'5m', parameters: stratData.parameters, execution: execData};
-    const r=await fetch(BASE+'/crypto-strategy-config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
-    const j=await r.json();
-    if(r.ok){ resEl.innerHTML+='<div class="notice" style="margin-top:8px">Bot is now focused on '+symbolsArr.join(', ')+' only  -  the paper engine will only ever act on these until you change it back in the Strategy tab.</div>'; loadStrategyConfig(); }
+    if(r.ok){ resEl.innerHTML+='<div class="notice" style="margin-top:8px">Bot is now focused on '+sym+' only.</div>'; loadStrategyConfig(); }
     else{ resEl.innerHTML+='<div class="errbox" style="margin-top:8px">'+(j.error||'Could not update strategy focus.')+'</div>'; }
   }catch(e){ resEl.innerHTML+='<div class="errbox" style="margin-top:8px">Could not reach backend.</div>'; }
 }
@@ -711,12 +663,12 @@ async function findBestSymbols(){
   resEl.innerHTML=''; statusEl.innerHTML='<div class="small">Loading market list...</div>';
   if(!deltaProducts.length){ try{ await loadDeltaProducts(); }catch(e){} }
   const symbols=deltaProducts.map(p=>p.symbol).filter(Boolean).slice(0,25);
-  if(!symbols.length){ statusEl.innerHTML='<div class="errbox">Market catalogue not loaded yet  -  try again in a moment.</div>'; return; }
+  if(!symbols.length){ statusEl.innerHTML='<div class="errbox">Market catalogue not loaded yet.</div>'; return; }
   const capital=Number(cryptoSettings.capital)||10000;
   const survivors=[];
   for(let i=0;i<symbols.length;i++){
     const sym=symbols[i];
-    statusEl.innerHTML='<div class="small">Backtesting '+sym+' ('+(i+1)+'/'+symbols.length+')  -  checking 30d and 60d...</div>';
+    statusEl.innerHTML='<div class="small">Backtesting '+sym+' ('+(i+1)+'/'+symbols.length+')...</div>';
     try{
       const q30=new URLSearchParams({symbol:sym, days:30, capital, riskPct:2}), q60=new URLSearchParams({symbol:sym, days:60, capital, riskPct:2});
       const [r30,r60]=await Promise.all([
@@ -726,36 +678,23 @@ async function findBestSymbols(){
       const m30 = r30 && r30.success && r30.results && r30.results[0] && r30.results[0].success ? r30.results[0].metrics : null;
       const m60 = r60 && r60.success && r60.results && r60.results[0] && r60.results[0].success ? r60.results[0].metrics : null;
       if(!m30 || !m60) continue;
-      if(m30.netPnl>=0 && m60.netPnl>=0 && m30.tradeCount>=10 && m60.tradeCount>=10){
+      if(m30.netPnl>=0 && m60.netPnl>=0 && m30.tradeCount>=5 && m60.tradeCount>=5){
         const tradesPerDay = m60.tradeCount/60;
         const avgWinRate = (m30.winRatePct+m60.winRatePct)/2;
         const avgPF = (m30.profitFactor+m60.profitFactor)/2;
         survivors.push({symbol:sym, m30, m60, tradesPerDay, avgWinRate, avgPF});
       }
-    }catch(e){ /* skip this symbol on error, keep going */ }
+    }catch(e){}
   }
-  if(!survivors.length){ statusEl.innerHTML=''; resEl.innerHTML='<div class="warnbox">None of your Top 25 symbols were consistently profitable across both 30d and 60d right now. Nothing to recommend today  -  that\'s a real, useful answer, not an error.</div>'; return; }
+  if(!survivors.length){ statusEl.innerHTML=''; resEl.innerHTML='<div class="warnbox">None of your Top 25 symbols were consistently profitable across both 30d and 60d right now.</div>'; return; }
   survivors.sort((a,b)=> b.tradesPerDay - a.tradesPerDay);
-  statusEl.innerHTML='<div class="small">'+survivors.length+' symbol(s) passed the 30d+60d check. Checking which are tradable right now...</div>';
-  for(const s of survivors){
-    try{ const res=await computeLiveTradePlan(s.symbol); s.tradableNow = !!(res.ok && res.tradable && res.qty>0); s.plan = res.ok?res:null; }
-    catch(e){ s.tradableNow=false; s.plan=null; }
-  }
   statusEl.innerHTML='';
-  let html='<div class="small" style="margin-bottom:8px">Ranked by setup frequency (trades/day over 60d) since that matters most for active scalping  -  not just raw profitability. Use this as a shortlist to watch, not an instruction.</div>';
-  html+='<div class="tbl-wrap"><table><tr><th>Symbol</th><th>Trades/day</th><th>Avg Win%</th><th>Avg PF</th><th>Tradable now</th></tr>';
-  survivors.forEach(s=>{
-    html+='<tr><td>'+s.symbol+(s.tradableNow?' <span class="small good">('+((s.plan&&s.plan.long)?'LONG':'SHORT')+')</span>':'')+'</td>'+
-      '<td>'+s.tradesPerDay.toFixed(1)+'</td><td>'+s.avgWinRate.toFixed(0)+'%</td><td>'+s.avgPF.toFixed(2)+'</td>'+
-      '<td>'+(s.tradableNow?'<span class="good">yes</span>':'<span class="small">no</span>')+'</td></tr>';
-  });
+  let html='<div class="small" style="margin-bottom:8px">Ranked by setup frequency.</div>';
+  html+='<div class="tbl-wrap"><table><tr><th>Symbol</th><th>Trades/day</th><th>Avg Win%</th><th>Avg PF</th></tr>';
+  survivors.forEach(s=>{ html+='<tr><td>'+s.symbol+'</td><td>'+s.tradesPerDay.toFixed(1)+'</td><td>'+s.avgWinRate.toFixed(0)+'%</td><td>'+s.avgPF.toFixed(2)+'</td></tr>'; });
   html+='</table></div>';
-  const tradableNow=survivors.filter(s=>s.tradableNow);
-  if(tradableNow.length){ html+='<div class="bestbox" style="margin-top:10px"><b>Tradable right now:</b> '+tradableNow.map(s=>s.symbol).join(', ')+'  -  these are worth actually watching this session.</div>'; }
-  else{ html+='<div class="warnbox" style="margin-top:10px">None of these are tradable under your current thresholds this exact moment  -  keep this list open and check back through the session.</div>'; }
   resEl.innerHTML=html;
 }
-
 function showCryptoTab(name){
   document.querySelectorAll('#app-crypto .tabpanel').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('#app-crypto .tabbar button').forEach(el => el.classList.remove('active'));
@@ -764,7 +703,6 @@ function showCryptoTab(name){
   document.getElementById('cTabBtn-'+name).classList.add('active');
   window.scrollTo({top:0, behavior:'smooth'});
 }
-
 function openChart(sym){
   const clean = sym.replace('.NS','');
   chartTitle.textContent = clean + '  -  5 min chart';
@@ -779,14 +717,11 @@ function openChart(sym){
   s.onload = function(){ tvWidgetLoaded = true; makeWidget(); }; document.body.appendChild(s);
 }
 function closeChart(){ chartModal.classList.remove('open'); chartContainer.innerHTML = ''; }
-
 function setStyle(s){
   entryStyle = s;
   stylePullbackBtn.classList.toggle('active', s==='pullback');
   styleBreakoutBtn.classList.toggle('active', s==='breakout');
-  styleExplain.textContent = s==='pullback'
-    ? 'Waits for price to settle back near VWAP with cooling volume  -  fewer chases, but can miss fast moves.'
-    : 'Flags a setup right as price breaks a recent high/low  -  catches moves early, higher chase risk.';
+  styleExplain.textContent = s==='pullback' ? 'Waits for price to settle back near VWAP.' : 'Flags a setup right as price breaks a recent high/low.';
 }
 function setUniverse(u){
   universe = u;
@@ -802,7 +737,6 @@ function setMode(m){
   maxInvestWrap.style.display = m==='budget' ? 'none' : 'block';
   modeExplain.textContent = m==='budget' ? 'Qty set so total cost fits your amount.' : 'Qty set so loss at stop equals your risk %.';
 }
-
 async function loadSettings(){
   try{ const r = await fetch(BASE+'/user-settings'); const j = await r.json();
     if(j.data){ mySettings = j.data; stCapital.value=j.data.capital; stRisk.value=j.data.max_risk_per_trade_pct;
@@ -820,15 +754,26 @@ async function saveSettings(){
 async function doLogout(){
   await clearKiteSessionOnly();
   checkAuth();
-  document.getElementById('kiteConnectionStatus').innerHTML='<span class="small">Disconnected from this browser. Tap Login with Zerodha to connect again.</span>';
 }
-function isAuthError(status){ return status===401 || status===403; }
-
 function openKiteCredDb(){
   return new Promise((resolve,reject)=>{
     const req=indexedDB.open(DELTA_CRED_DB,1);
     req.onupgradeneeded=()=>{ if(!req.result.objectStoreNames.contains(DELTA_CRED_STORE)) req.result.createObjectStore(DELTA_CRED_STORE); };
     req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
+  });
+}
+function bufToB64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)));}
+function b64ToBuf(str){return Uint8Array.from(atob(str),c=>c.charCodeAt(0));}
+async function getLocalDeltaKey(){
+  const db=await openKiteCredDb();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(DELTA_CRED_STORE,'readonly'); const r=tx.objectStore(DELTA_CRED_STORE).get('key');
+    r.onsuccess=async()=>{
+      if(r.result){resolve(await crypto.subtle.importKey('raw',b64ToBuf(r.result),{name:'AES-GCM'},false,['encrypt','decrypt']));return;}
+      const key=await crypto.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']);
+      const raw=await crypto.subtle.exportKey('raw',key);
+      const txw=db.transaction(DELTA_CRED_STORE,'readwrite'); txw.objectStore(DELTA_CRED_STORE).put(bufToB64(raw),'key'); txw.oncomplete=()=>resolve(key); txw.onerror=()=>reject(txw.error);
+    }; r.onerror=()=>reject(r.error);
   });
 }
 async function getKiteCredentials(){
@@ -854,7 +799,7 @@ async function saveKiteCredentials(){
     const db=await openKiteCredDb(); const tx=db.transaction(DELTA_CRED_STORE,'readwrite');
     tx.objectStore(DELTA_CRED_STORE).put({iv:bufToB64(iv),data:bufToB64(cipher)},KITE_CRED_KEY);
     tx.oncomplete=()=>{st.innerHTML='<span class="good">Kite credentials saved securely on this device.</span>';document.getElementById('kiteApiSecret').value='';};
-    tx.onerror=()=>{st.innerHTML='<span class="bad">Could not save Kite credentials on this device.</span>';};
+    tx.onerror=()=>{st.innerHTML='<span class="bad">Could not save Kite credentials.</span>';};
     return true;
   }catch(e){st.innerHTML='<span class="bad">Secure local storage is unavailable in this browser.</span>';return false;}
 }
@@ -875,28 +820,27 @@ async function clearKiteSessionOnly(){
   const db=await openKiteCredDb(); const tx=db.transaction(DELTA_CRED_STORE,'readwrite');tx.objectStore(DELTA_CRED_STORE).put({iv:bufToB64(iv),data:bufToB64(cipher)},KITE_CRED_KEY);
 }
 async function clearKiteCredentials(){
-  try{const db=await openKiteCredDb();const tx=db.transaction(DELTA_CRED_STORE,'readwrite');tx.objectStore(DELTA_CRED_STORE).delete(KITE_CRED_KEY);tx.oncomplete=()=>{document.getElementById('kiteCredentialStatus').innerHTML='<span class="small">Saved Kite credentials cleared from this browser.</span>';document.getElementById('kiteApiKey').value='';document.getElementById('kiteApiSecret').value='';document.getElementById('kiteConnectionStatus').textContent='No Kite credentials saved.';checkAuth();};}catch(e){}
+  try{const db=await openKiteCredDb();const tx=db.transaction(DELTA_CRED_STORE,'readwrite');tx.objectStore(DELTA_CRED_STORE).delete(KITE_CRED_KEY);tx.oncomplete=()=>{document.getElementById('kiteCredentialStatus').innerHTML='<span class="small">Saved Kite credentials cleared.</span>';document.getElementById('kiteApiKey').value='';document.getElementById('kiteApiSecret').value='';checkAuth();};}catch(e){}
 }
 function toggleKiteSecret(){const el=document.getElementById('kiteApiSecret');el.type=el.type==='password'?'text':'password';}
 async function loadKiteCredentialState(){
   const st=document.getElementById('kiteCredentialStatus'); const c=await getKiteCredentials();
-  st.innerHTML=c?'<span class="good">Encrypted Kite credentials are saved on this device.</span>':'<span class="small">No Kite credentials saved in this browser.</span>';
+  st.innerHTML=c?'<span class="good">Encrypted Kite credentials are saved on this device.</span>':'<span class="small">No Kite credentials saved.</span>';
   if(c) document.getElementById('kiteApiKey').value=c.api_key||'';
 }
 async function kitePrivate(action, extra={}){
   const c=await getKiteCredentials();
-  if(!c || !c.api_key){return {ok:false,status:400,error:'No Kite API credentials saved in this dashboard.'};}
+  if(!c || !c.api_key){return {ok:false,status:400,error:'No Kite API credentials saved.'};}
   try{
     const body={action,api_key:c.api_key,api_secret:c.api_secret||'',access_token:c.access_token||'',...extra};
     const r=await fetch(BASE+'/kite-connection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const j=await r.json(); j.status=r.status; return j;
-  }catch(e){return {ok:false,status:0,error:'Could not reach Kite connection service.'};}
+  }catch(e){return {ok:false,status:0,error:'Could not reach Kite service.'};}
 }
 async function connectZerodha(){
   const c=await getKiteCredentials();
   if(!c){document.getElementById('kiteConnectionStatus').innerHTML='<span class="bad">Save your Kite API Key and Secret first.</span>';showTab('settings');return;}
   const loginUrl='https://kite.zerodha.com/connect/login?v=3&api_key='+encodeURIComponent(c.api_key)+'&redirect_params='+encodeURIComponent('tradepilot=1');
-  document.getElementById('kiteConnectionStatus').innerHTML='<span class="small">Opening Zerodha login. Complete login and authorize TradePilot; you will return here automatically.</span>';
   window.location.href=loginUrl;
 }
 async function finishKiteCallback(){
@@ -905,7 +849,7 @@ async function finishKiteCallback(){
   history.replaceState({},document.title,window.location.pathname);
   const status=document.getElementById('kiteConnectionStatus'); status.textContent='Completing Zerodha connection...';
   const j=await kitePrivate('exchange',{request_token:requestToken});
-  if(!j.ok || !j.access_token){status.innerHTML='<span class="bad">Zerodha connection failed: '+(j.error||'Could not exchange request token.')+'</span>';return;}
+  if(!j.ok || !j.access_token){status.innerHTML='<span class="bad">Zerodha connection failed.</span>';return;}
   await setKiteSession(j.access_token,j.user_id||'');
   status.innerHTML='<span class="good">Connected to Zerodha for today.</span>';
   checkAuth(); refreshKiteAccount();
@@ -917,13 +861,12 @@ async function checkAuth(){
     const loggedIn=!!(j.ok && j.data);
     authStatus.textContent=loggedIn?'Zerodha connected':'Zerodha not connected'; authStatus.className=loggedIn?'small good':'small bad';
     loginBanner.classList.toggle('ok',loggedIn); logoutBtn.style.display=loggedIn?'inline-block':'none';
-    const ks=document.getElementById('kiteConnectionStatus'); if(ks && loggedIn) ks.innerHTML='<span class="good">Connected to Zerodha for today.</span>';
     if(j.status===401 || j.status===403){await clearKiteSessionOnly();}
   }catch(e){authStatus.textContent='Could not reach Kite backend.';}
 }
 async function loadMargins(){
   margins.textContent='Loading...'; const j=await kitePrivate('margins');
-  if(j.status===401||j.status===403){margins.innerHTML='<span class="bad">Zerodha session expired. Tap Connect Zerodha.</span>';await clearKiteSessionOnly();checkAuth();return;}
+  if(j.status===401||j.status===403){margins.innerHTML='<span class="bad">Zerodha session expired.</span>';await clearKiteSessionOnly();checkAuth();return;}
   if(!j.ok || !j.data){margins.innerHTML='<span class="bad">'+(j.error||j.message||'Error')+'</span>';return;}
   const eq=j.data.equity||{}; margins.innerHTML='<div class="grid"><div><div class="k">Available</div><div class="v">INR '+Math.round(Number(eq.available?.live_balance||0)).toLocaleString('en-IN')+'</div></div><div><div class="k">Used</div><div class="v">INR '+Math.round(Number(eq.utilised?.debits||0)).toLocaleString('en-IN')+'</div></div></div>';
 }
@@ -940,7 +883,6 @@ async function loadHoldings(){
   let html='<table><tr><th>Symbol</th><th>Qty</th><th>P&amp;L</th></tr>'; for(const p of h){html+='<tr><td>'+p.tradingsymbol+'</td><td>'+p.quantity+'</td><td class="'+(p.pnl>=0?'good':'bad')+'">INR '+Number(p.pnl||0).toFixed(0)+'</td></tr>';} holdings.innerHTML=html+'</table>';
 }
 async function refreshKiteAccount(){checkAuth();loadMargins();loadPositions();loadHoldings();}
-
 async function loadOrders(){
   orders.textContent='Loading...';
   const r = await fetch(BASE+'/trade-log'); const j = await r.json();
@@ -999,14 +941,14 @@ async function deleteEntry(id){
 }
 async function clearStockLog(){
   if(!lastOrders.length){ alert('Nothing to clear — tap Refresh first.'); return; }
-  if(!confirm('Permanently delete all '+lastOrders.length+' logged trade(s)? This cannot be undone.')) return;
+  if(!confirm('Permanently delete all '+lastOrders.length+' logged trade(s)?')) return;
   const ids = lastOrders.map(o => o.id);
   let failed = 0;
   for(const id of ids){
     try{ const r = await fetch(BASE+'/trade-log?id='+id, {method:'DELETE'}); if(!r.ok) failed++; }catch(e){ failed++; }
   }
   await loadOrders();
-  alert(failed ? (ids.length-failed)+' of '+ids.length+' deleted. '+failed+' failed — tap Clear Records again to retry.' : 'Trade log cleared.');
+  alert(failed ? (ids.length-failed)+' of '+ids.length+' deleted.' : 'Trade log cleared.');
 }
 function syncInvested(){ const q=parseFloat(qty.value||'0'), p=parseFloat(price.value||'0'); if(q&&p) invested.value=(q*p).toFixed(0); }
 function updateFormLabels(){
@@ -1026,7 +968,6 @@ async function logTrade(){
       else { orderResult.innerHTML = '<div class="errbox">'+(j.error||'Could not save')+'</div>'; } }
   }catch(e){ orderResult.innerHTML='<div class="errbox">Could not reach backend.</div>'; }
 }
-
 let lastScan = []; let shownCount = 10;
 async function runScan(){
   scanState.textContent='Scanning...'; scanResults.innerHTML=''; showMoreBtn.style.display='none'; marketBanner.style.display='none'; ticketCard.style.display='none'; shownCount = 10;
@@ -1061,12 +1002,12 @@ function getFiltered(){
 }
 const CONF_LABEL = { low: 'RED Low confidence', medium: 'YELLOW Medium confidence', full: 'GREEN Full confidence' };
 function timeGuideHtml(x){
-  return '<div class="timebox"><b>Time Time &amp; Exit Guide</b><br>Estimated time to target: <b>~'+x.estMinutesLow+'-'+x.estMinutesHigh+' min</b> (rough guess, not a promise).<br>'+
-    'Move stop-loss to breakeven (INR '+x.entry.toFixed(2)+') once price reaches <b>INR '+x.breakevenTrigger.toFixed(2)+'</b>.<br>'+
+  return '<div class="timebox"><b>Time &amp; Exit Guide</b><br>Estimated time to target: <b>~'+x.estMinutesLow+'-'+x.estMinutesHigh+' min</b>.<br>'+
+    'Move stop-loss to breakeven once price reaches <b>INR '+x.breakevenTrigger.toFixed(2)+'</b>.<br>'+
     'Hard cutoff: exit manually by ~3:15pm IST if neither hits.</div>';
 }
 function costNoteHtml(x){
-  return '<div class="costnote">WARNING Brokerage, STT, and other charges apply on top of this  -  roughly INR 10-40 round-trip depending on position size, which can eat a big share of a small possible profit like INR '+x.possibleProfit.toFixed(0)+'. Bigger position size or a higher Min R:R dilutes this drag.</div>';
+  return '<div class="costnote">WARNING Brokerage, STT, and other charges apply  -  roughly INR 10-40 round-trip. Factor that in.</div>';
 }
 function sinceLastScanHtml(x){
   if(!x.sinceLastScan){ return '<span class="movetag flat">First scan this session</span>'; }
@@ -1111,7 +1052,6 @@ function renderScan(errors){
   scanResults.innerHTML = html; showMoreBtn.style.display = filtered.length > shownCount ? 'block' : 'none';
 }
 function showMore(){ shownCount += 10; renderScan(); }
-
 async function searchStock(){
   const symInput = document.getElementById('searchSymbol').value.trim();
   const resultEl = document.getElementById('searchResult');
@@ -1122,13 +1062,12 @@ async function searchStock(){
     const q = new URLSearchParams({mode: sizingMode, style: entryStyle, capital: cap, risk: risk, budget: budget, symbol: symInput});
     const r = await fetch(BASE+'/trade-scanner?'+q.toString()); const j = await r.json();
     if(j.notFound || !j.results || !j.results.length){
-      resultEl.innerHTML = '<div class="errbox">Could not find or analyze "'+symInput.toUpperCase()+'"  -  check the symbol is correct and listed on NSE.</div>';
+      resultEl.innerHTML = '<div class="errbox">Could not find or analyze "'+symInput.toUpperCase()+'".</div>';
       return;
     }
     resultEl.innerHTML = cardHtml(j.results[0], 0, true);
   }catch(e){ resultEl.innerHTML = '<div class="errbox">Could not reach backend.</div>'; }
 }
-
 function renderTicket(x){
   currentTicket = x; const isLong = x.side==='LONG'; const cls = isLong ? 'buy' : 'sell'; const cleanSym = x.sym.replace('.NS','');
   ticketBody.innerHTML =
@@ -1144,9 +1083,9 @@ function renderTicket(x){
       '<div class="ticket-pnl-box loss"><div class="amt" id="ticketLoss">INR '+x.possibleLoss.toFixed(0)+'</div><div class="lbl2">Possible loss if stop hits</div></div></div>'+
     '<div class="ticket-note" id="ticketInvestNote">Amount needed: INR '+x.amountToInvest.toLocaleString('en-IN',{maximumFractionDigits:0})+'.</div>'+
     timeGuideHtml(x)+costNoteHtml(x)+
-    '<div class="ticket-step" style="margin-top:16px"><b>Option A  -  Log only (safe, manual)</b><br>Save this to your log, then place it yourself on Zerodha.</div>'+
+    '<div class="ticket-step" style="margin-top:16px"><b>Option A  -  Log only</b></div>'+
     '<button class="btn2 btn" style="margin-top:8px" onclick="fillLogFromTicket()">Log This Trade Only</button>'+
-    '<div class="ticket-step" style="margin-top:16px;background:#fef2f2;color:#7f1d1d"><b>WARNING Option B  -  Place this as a REAL order on Zerodha, right now</b><br>Real money. Real order. Automatically placed as AMO if markets are closed, or a regular intraday order if markets are open.</div>'+
+    '<div class="ticket-step" style="margin-top:16px;background:#fef2f2;color:#7f1d1d"><b>WARNING Option B  -  Place REAL order</b></div>'+
     '<button class="btnLive" onclick="placeRealOrder()">LIVE Place REAL Order Now</button>'+
     '<div id="liveOrderResult"></div>'+
     '</div>';
@@ -1166,42 +1105,31 @@ function fillLogFromTicket(){
   document.getElementById('qty').value = qty; price.value = x.entry.toFixed(2); sl.value = x.sl.toFixed(2); target.value = x.target.toFixed(2); invested.value = (x.entry*qty).toFixed(0);
   showTab('log');
 }
-
 async function placeRealOrder(){
   if(!currentTicket) return;
   const x = currentTicket;
   const qty = Math.max(1, parseInt(document.getElementById('ticketQty').value || x.qty));
   const cleanSym = x.sym.replace('.NS','');
   const sideLabel = x.side==='LONG' ? 'BUY' : 'SELL';
-  const sure1 = confirm('Place a REAL '+sideLabel+' order for '+qty+' shares of '+cleanSym+' at \u20b9'+x.entry.toFixed(2)+'?\n\nThis sends a live order to Zerodha using real money.');
+  const sure1 = confirm('Place a REAL '+sideLabel+' order for '+qty+' shares of '+cleanSym+' at ₹'+x.entry.toFixed(2)+'?');
   if(!sure1) return;
-  const sure2 = confirm('Final confirmation: this CANNOT be undone once placed. Proceed with the REAL '+sideLabel+' order for '+qty+' '+cleanSym+'?');
+  const sure2 = confirm('Final confirmation: this CANNOT be undone.');
   if(!sure2) return;
-
   const resEl = document.getElementById('liveOrderResult');
   resEl.innerHTML = '<div class="small">Placing live order...</div>';
   try{
     const kc = await getKiteCredentials();
-    if(!kc || !kc.access_token){ resEl.innerHTML = '<div class="liveresult err">Zerodha is not connected for today. Tap Connect Zerodha first.</div>'; return; }
+    if(!kc || !kc.access_token){ resEl.innerHTML = '<div class="liveresult err">Zerodha is not connected for today.</div>'; return; }
     const body = { exchange:'NSE', symbol: cleanSym, side: sideLabel, qty: qty, price: x.entry, order_type:'LIMIT', product:'MIS', stop_loss: x.sl, api_key:kc.api_key, access_token:kc.access_token };
     const r = await fetch(BASE+'/kite-place-order', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
     const j = await r.json();
-    if(r.ok){
-      const varietyNote = j.variety === 'amo'
-        ? ' Placed as an AMO (After Market Order) since the market is closed right now  -  it will execute automatically at the next market open.'
-        : ' Placed as a regular live intraday order.';
-      resEl.innerHTML = '<div class="liveresult ok">OK Order placed.'+varietyNote+' Order ID: '+j.order_id+'. Set your GTT OCO on Zerodha once it fills, to protect it.</div>';
-      loadOrders();
-    }
+    if(r.ok){ resEl.innerHTML = '<div class="liveresult ok">OK Order placed. ID: '+j.order_id+'</div>'; loadOrders(); }
     else { resEl.innerHTML = '<div class="liveresult err">X '+(j.detail || j.error)+'</div>'; }
   }catch(e){ resEl.innerHTML = '<div class="liveresult err">Could not reach backend.</div>'; }
 }
-
 function fillOrder(x){
   cancelEdit(); renderTicket(x); ticketCard.scrollIntoView({behavior:'smooth'});
 }
-
-/* =========================== CRYPTO =========================== */
 let cryptoSettings = { capital: 10000, max_risk_per_trade_pct: 1.0, default_leverage: 5 };
 let cEditingId = null; let cOrders = []; let lastCryptoScan = [];
 async function loadCryptoSettings(){
@@ -1238,16 +1166,13 @@ async function loadCryptoPortfolio(){
     cPositions.innerHTML = html || 'No open positions.';
   }catch(e){ cBalances.innerHTML = '<span class="bad">Connect Delta Exchange India in Settings first.</span>'; }
 }
-// Robustly turns whatever timestamp shape Delta sends (unix seconds, ms, microseconds, or an
-// ISO date string) into a comparable epoch-ms number. Number(isoString) is NaN, which previously
-// made every fill compare "equal" and silently skipped the chronological sort entirely.
 function toEpochMs(v){
   if(v==null || v==='') return 0;
   const n = Number(v);
   if(Number.isFinite(n)){
-    if(n > 1e15) return Math.floor(n/1000); // microseconds -> ms
-    if(n > 1e12) return n;                   // already ms
-    return n * 1000;                          // seconds -> ms
+    if(n > 1e15) return Math.floor(n/1000);
+    if(n > 1e12) return n;
+    return n * 1000;
   }
   const d = new Date(v);
   return isNaN(d.getTime()) ? 0 : d.getTime();
@@ -1275,24 +1200,17 @@ function normFill(f){
   const time = f.created_at ?? f.time ?? f.timestamp ?? null;
   const timeMs = toEpochMs(time);
   const apiPnl = f.pnl ?? f.realized_pnl ?? (f.meta_data && f.meta_data.pnl) ?? null;
-  // Delta reports fill/order status under different keys depending on endpoint (state, order_status, status...).
   const rawState = f.state ?? f.order_status ?? f.status ?? f.order_state ?? f.fill_state ?? null;
   return { symbol, side, size, price, fee, time, timeMs, apiPnl, rawState, raw: f };
 }
-// Delta's "size" on a fill is a contract count, not raw underlying units (e.g. 1 BTCUSD contract
-// is typically 0.001 BTC) -- P&L must be multiplied by the product's real contract_value or it
-// comes out wildly inflated. deltaProducts is the same catalogue the Strategy/Scan tabs already load.
 function contractValueFor(symbol){
   const p = deltaProducts.find(x => x.symbol === symbol);
   const cv = p ? Number(p.contract_value) : NaN;
   return Number.isFinite(cv) && cv > 0 ? cv : 1;
 }
-// FIFO-matches opposite-side fills per symbol to derive realized P&L and open/close status,
-// since a raw fill record on its own carries no P&L or position-lifecycle info.
-// Fills MUST be processed oldest-first for this to be correct, hence the explicit timeMs sort.
 function computeFillsPnl(fills){
   const chronological = [...fills].map(normFill).sort((a,b) => a.timeMs - b.timeMs);
-  const books = {}; // symbol -> [{side, size, price}]
+  const books = {};
   chronological.forEach(nf => {
     if(!Number.isFinite(nf.size) || !Number.isFinite(nf.price) || nf.size<=0){ nf.pnl = nf.apiPnl; nf.status = 'UNKNOWN'; return; }
     if(nf.apiPnl!=null){ nf.pnl = Number(nf.apiPnl); nf.status = nf.pnl!==0 ? 'CLOSE' : 'OPEN'; return; }
@@ -1322,43 +1240,29 @@ async function runDeltaDiagnostics(){
   const fail = (label, detail) => lines.push('<div style="color:#f87171">✗ '+esc(label)+'</div>'+(detail?'<div class="small" style="margin-left:18px">'+esc(detail)+'</div>':''));
   try{
     const creds = await getDeltaCredentials();
-    if(!creds || !creds.api_key || !creds.api_secret){ fail('Credentials saved','No Delta API key/secret found in Settings.'); el.innerHTML='<div class="tablewrap"><div style="padding:10px">'+lines.join('')+'</div></div>'; return; }
-    if(!creds.proxy_url){ fail('Proxy URL saved','Missing Noble proxy URL — re-save your Delta credentials.'); el.innerHTML='<div class="tablewrap"><div style="padding:10px">'+lines.join('')+'</div></div>'; return; }
+    if(!creds || !creds.api_key || !creds.api_secret){ fail('Credentials saved','No Delta API key/secret found.'); el.innerHTML='<div class="tablewrap"><div style="padding:10px">'+lines.join('')+'</div></div>'; return; }
+    if(!creds.proxy_url){ fail('Proxy URL saved','Missing Noble proxy URL.'); el.innerHTML='<div class="tablewrap"><div style="padding:10px">'+lines.join('')+'</div></div>'; return; }
     pass('Credentials saved', 'API key ending in …'+String(creds.api_key).slice(-4));
-
     const conn = await deltaPrivate('connect');
     if(conn.ok) pass('Connect / auth check'); else fail('Connect / auth check', conn.error||'unknown error');
-
     const acct = await deltaPrivate('account');
     if(acct.ok){
       const bal = acct.balances||acct.result||[];
       const pos = (acct.positions||[]).filter(p=>Number(p.size||0)!==0);
-      pass('Account fetch (balances + positions)', bal.length+' balance row(s), '+pos.length+' real open position(s)'+(pos.length?': '+pos.map(p=>esc(String(p.symbol||p.product_symbol||'?'))+' size='+p.size).join(', '):''));
-    } else fail('Account fetch (balances + positions)', acct.error||'unknown error');
-
+      pass('Account fetch', bal.length+' balance row(s), '+pos.length+' real open position(s)');
+    } else fail('Account fetch', acct.error||'unknown error');
     if(!deltaProducts.length){ try{ await loadDeltaProducts(); }catch(e){} }
-    if(deltaProducts.length) pass('Market catalogue loaded (contract values)', deltaProducts.length+' product(s) loaded'); else fail('Market catalogue loaded (contract values)', 'deltaProducts is empty — P&L scaling will default to 1x and may be wrong.');
-
+    if(deltaProducts.length) pass('Market catalogue loaded', deltaProducts.length+' product(s)'); else fail('Market catalogue loaded', 'deltaProducts is empty');
     const fj = await deltaPrivate('fills', {page_size:5});
-    if(!fj.ok){ fail('Fills fetch (sample of 5)', fj.error||'unknown error'); }
+    if(!fj.ok){ fail('Fills fetch', fj.error||'unknown error'); }
     else{
       const raw5 = fj.fills || fj.data || fj.result || [];
-      pass('Fills fetch (sample of 5)', raw5.length+' fill(s) returned');
-      if(raw5.length){
-        const sample = raw5[0];
-        const nf = normFill(sample);
-        nf.pnl = null;
-        const cv = contractValueFor(nf.symbol);
-        lines.push('<div style="margin-top:10px"><b>Sample fill — raw Delta data:</b><div style="white-space:pre-wrap;font-family:monospace;font-size:11px;max-height:180px;overflow:auto;background:#0d1527;padding:8px;border-radius:8px;margin-top:4px">'+esc(JSON.stringify(sample,null,2))+'</div></div>');
-        lines.push('<div style="margin-top:10px"><b>How this app parsed it:</b><div style="white-space:pre-wrap;font-family:monospace;font-size:11px;background:#0d1527;padding:8px;border-radius:8px;margin-top:4px">'+esc(JSON.stringify({symbol:nf.symbol, side:nf.side, size:nf.size, price:nf.price, fee:nf.fee, time:nf.time, timeMs:nf.timeMs, rawState:nf.rawState, contract_value_used:cv},null,2))+'</div></div>');
-        if(!Number.isFinite(nf.size) || !Number.isFinite(nf.price)) fail('Sample fill parsed cleanly', 'size or price came out non-numeric — check the raw fields above for the actual key names Delta used.');
-        else pass('Sample fill parsed cleanly');
-      }
+      pass('Fills fetch', raw5.length+' fill(s) returned');
     }
   }catch(e){
     fail('Diagnostics run', String(e&&e.message||e));
   }
-  el.innerHTML = '<div class="tablewrap"><div style="padding:10px">'+lines.join('')+'</div></div><div class="small" style="margin-top:8px">Screenshot this and send it over if anything still looks wrong — the raw vs. parsed fields above show exactly where a mismatch is.</div>';
+  el.innerHTML = '<div class="tablewrap"><div style="padding:10px">'+lines.join('')+'</div></div>';
 }
 async function loadDeltaHistory(){
   const el = document.getElementById('cDeltaHistory');
@@ -1373,22 +1277,18 @@ async function loadDeltaHistory(){
     if(limitV === 'all'){ extra.fetch_all = true; extra.page_size = 250; }
     else extra.page_size = parseInt(limitV) || 100;
     if(!deltaProducts.length){ try{ await loadDeltaProducts(); }catch(e){} }
-    // Fetch your REAL current open positions too -- this is ground truth, unlike a fill
-    // window (which may not go back far enough to see the fill that originally opened a
-    // position, making it look "still open" here even though it's long since been closed).
     const acctP = deltaPrivate('account');
     const j = await deltaPrivate('fills', extra);
-    if(!j.ok){ el.innerHTML = '<span class="warnbox">Delta did not return your history: '+esc(j.error||'unknown error')+'. Check your saved API credentials in Settings and try again.</span>'; return; }
+    if(!j.ok){ el.innerHTML = '<span class="warnbox">Delta did not return your history: '+esc(j.error||'unknown error')+'.</span>'; return; }
     lastDeltaFills = j.fills || j.data || j.result || [];
-    if(!lastDeltaFills.length){ el.textContent = 'No real fills found for this range on your Delta account.'; return; }
-    lastDeltaFillsAnnotated = computeFillsPnl(lastDeltaFills).reverse(); // most recent first
-    if(j.truncated) lastDeltaFillsAnnotated._truncated = true;
+    if(!lastDeltaFills.length){ el.textContent = 'No real fills found for this range.'; return; }
+    lastDeltaFillsAnnotated = computeFillsPnl(lastDeltaFills).reverse();
     try{
       const acct = await acctP;
       lastLiveOpenSymbols = new Set((acct.positions||[]).filter(p => Number(p.size||0)!==0).map(p => String(p.symbol||p.product_symbol||'').toUpperCase()));
     }catch(e){ lastLiveOpenSymbols = new Set(); }
     renderDeltaHistoryTable();
-  }catch(e){ el.innerHTML = '<span class="warnbox">Could not reach Delta right now. Try again in a moment.</span>'; }
+  }catch(e){ el.innerHTML = '<span class="warnbox">Could not reach Delta right now.</span>'; }
 }
 function filteredDeltaFills(){
   const side = (document.getElementById('dhSide')?.value || 'ALL').toLowerCase();
@@ -1397,7 +1297,6 @@ function filteredDeltaFills(){
   return lastDeltaFillsAnnotated.filter(nf => {
     if(executedOnly){
       if(nf.rawState != null){
-        // Trust Delta's own status field when present -- only keep rows explicitly marked "filled".
         if(String(nf.rawState).toLowerCase() !== 'filled') return false;
       } else if(!(Number.isFinite(nf.size) && nf.size>0)){
         return false;
@@ -1414,12 +1313,7 @@ function renderDeltaHistoryTable(){
   const rows = filteredDeltaFills();
   if(!rows.length){ el.innerHTML = '<div class="small">No fills match the current filters.</div>'; return; }
   const totalPnl = rows.reduce((s,r) => s + (Number(r.pnl)||0), 0);
-  let html = '';
-  const allTimesZero = lastDeltaFillsAnnotated.every(nf => !nf.timeMs);
-  if(allTimesZero) html += '<div class="warnbox" style="margin-bottom:8px">Could not read a usable timestamp from any fill  -  Open/Closed status and P&amp;L below may be unreliable. Tap "view the raw fields" below and send it over so the time field can be mapped correctly.</div>';
-  if(lastDeltaFillsAnnotated._truncated) html += '<div class="small" style="margin-bottom:8px">Showing the first 2000 fills for this range  -  narrow the date range to see more.</div>';
-  html += '<div class="small" style="margin-bottom:6px">'+rows.length+' of '+lastDeltaFillsAnnotated.length+' fill(s) shown, most recent first. Net realized P&amp;L shown (this window only): <b class="'+(totalPnl>=0?'good':'bad')+'">'+totalPnl.toFixed(2)+'</b> (fees not subtracted)</div>';
-  html += '<div class="notice" style="margin-bottom:8px">Currently open on your real Delta account right now: <b>'+(lastLiveOpenSymbols.size ? [...lastLiveOpenSymbols].join(', ') : 'none')+'</b>. Trust the "Live Now" column below over "Fill Effect"  -  Fill Effect is only a guess based on the fills currently loaded and can be wrong if older history isn\'t loaded (use "All" above to load full history for accurate matching).</div>';
+  let html = '<div class="small" style="margin-bottom:6px">'+rows.length+' of '+lastDeltaFillsAnnotated.length+' fill(s) shown. Net realized P&amp;L (this window): <b class="'+(totalPnl>=0?'good':'bad')+'">'+totalPnl.toFixed(2)+'</b></div>';
   html += '<div class="tablewrap"><table><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Exec Price</th><th>Fee</th><th>P&amp;L</th><th>Fill Effect</th><th>Live Now</th><th>Time</th></tr>';
   rows.forEach(nf => {
     const isLive = lastLiveOpenSymbols.has(nf.symbol.toUpperCase());
@@ -1428,14 +1322,7 @@ function renderDeltaHistoryTable(){
     html += '<tr><td>'+esc(nf.symbol)+'</td><td class="'+(nf.side==='buy'?'good':'bad')+'">'+esc(nf.side||'-')+'</td><td>'+(Number.isFinite(nf.size)?nf.size:'-')+'</td><td>'+(Number.isFinite(nf.price)?nf.price:'-')+'</td><td>'+(nf.fee||0).toFixed(4)+'</td><td class="'+pnlClass+'">'+pnlStr+'</td><td>'+esc(nf.status||'-')+'</td><td class="'+(isLive?'good':'')+'">'+(isLive?'Yes':'No')+'</td><td>'+esc(fmtDeltaTime(nf.time))+'</td></tr>';
   });
   html += '</table></div>';
-  html += '<div class="small" style="margin-top:8px"><a href="#" onclick="toggleDeltaRawDebug();return false">Not seeing execution price or P&amp;L correctly? Tap to view the raw fields Delta sent</a><div id="cDeltaRawDebug" style="display:none;margin-top:6px;white-space:pre-wrap;font-family:monospace;font-size:11px;max-height:240px;overflow:auto;background:#0d1527;padding:8px;border-radius:8px"></div></div>';
   el.innerHTML = html;
-}
-function toggleDeltaRawDebug(){
-  const box = document.getElementById('cDeltaRawDebug');
-  if(!box) return;
-  if(box.style.display==='none'){ box.textContent = JSON.stringify(lastDeltaFills[0]||{}, null, 2); box.style.display='block'; }
-  else box.style.display='none';
 }
 function downloadDeltaHistory(){
   if(!lastDeltaFillsAnnotated.length){ alert('Tap "Load Real History" first.'); return; }
@@ -1466,7 +1353,7 @@ async function runCryptoScan(){
     while(safety++ < 20){
       const r = await fetch(BASE+'/delta-scanner?limit=60&offset='+offset);
       const j = await r.json();
-      if(j.error === 'not_configured' || (j.success===false && j.error==='not_configured')){ cScanState.textContent = 'Not configured.'; cScanDetail.textContent = 'crypto_strategy_configs or crypto_execution_settings has no row yet.'; return; }
+      if(j.error === 'not_configured' || (j.success===false && j.error==='not_configured')){ cScanState.textContent = 'Not configured.'; cScanDetail.textContent = 'crypto_strategy_configs has no row yet.'; return; }
       if(!j.success){ cScanState.textContent = 'Scan failed.'; cScanDetail.textContent = j.error || 'Backend error.'; return; }
       const rows = j.results || [];
       rows.forEach(x => { if(x.side==='ERROR') totalErrors++; else lastCryptoScan.push(x); });
@@ -1498,9 +1385,8 @@ function renderCryptoScan(errors, minScoreSeen){
       '<div class="scancard-item"><div class="lbl">Volume Ratio</div><div class="val">'+(Number.isFinite(x.volumeRatio)?x.volumeRatio.toFixed(2)+'x':' - ')+'</div></div>'+
       '<div class="scancard-item"><div class="lbl">Qty (if tradable)</div><div class="val">'+(x.qty||0).toFixed(4)+'</div></div>'+
       '<div class="scancard-item"><div class="lbl">Contract Value</div><div class="val">'+x.contractValue+'</div></div>'+
-      '<div class="scancard-item"><div class="lbl">MACD confirmed</div><div class="val">'+(x.macdFinite===false?'no data yet':(x.macdFinite?'yes':'no'))+'</div></div>'+
+      '<div class="scancard-item"><div class="lbl">EMA Trend</div><div class="val">'+(x.trendPass===true?'PASS':x.trendPass===false?'FAIL':'?')+'</div></div>'+
       '<div class="scancard-item"><div class="lbl">Bars used</div><div class="val">'+(x.barCount??' - ')+'</div></div></div>'+
-      '<div class="small" style="margin-top:8px">Entry, stop, target and margin aren\'t part of the raw scan  -  tap Prefill Log below to pull a live read for this symbol.</div>'+
       (x.tradable ? '<button class="btn" style="margin-top:10px" onclick=\'cUseSetup('+JSON.stringify({symbol:x.symbol,side:x.side,qty:x.qty})+')\'>Prefill Log</button>' : '')+
       '</div>';
   });
@@ -1513,11 +1399,11 @@ async function cUseSetup(x){
   cOrderResult.innerHTML = '<div class="small">Fetching current entry/stop/target/margin for '+x.symbol+'...</div>';
   let res;
   try{ res = await computeLiveTradePlan(x.symbol); }catch(e){ res = {ok:false, reason:(e.message||'unknown error')}; }
-  if(!res.ok){ cOrderResult.innerHTML = '<div class="warnbox">Could not prefill entry/stop/target/margin for '+x.symbol+'  -  '+res.reason+' You can still enter them manually.</div>'; return; }
+  if(!res.ok){ cOrderResult.innerHTML = '<div class="warnbox">Could not prefill for '+x.symbol+'  -  '+res.reason+'</div>'; return; }
   cEntry.value = res.entry.toFixed(4); cSL.value = res.stop.toFixed(4); cTarget.value = res.target.toFixed(4);
   cMargin.value = res.margin.toFixed(2); cLeverage.value = res.leverage;
   if(res.qty > 0) cQty.value = res.qty.toFixed(4);
-  cOrderResult.innerHTML = '<div class="notice">Prefilled from a live read just now'+(res.staleCandles>0?' (latest clean candle, ~'+(res.staleCandles*5)+' min old)':'')+'. Review before saving.</div>';
+  cOrderResult.innerHTML = '<div class="notice">Prefilled from a live read. Review before saving.</div>';
 }
 async function cLogTrade(){
   cOrderResult.innerHTML = cEditingId ? 'Updating...' : 'Saving...';
@@ -1588,7 +1474,7 @@ async function cCloseTrade(id){
     const ok = confirm('Close '+(sym||'this trade')+' at the current live price '+exitPrice.toFixed(4)+'?');
     if(!ok) return;
   } else {
-    const exitStr = prompt('Could not fetch a live price automatically  -  enter the exit price manually:');
+    const exitStr = prompt('Could not fetch a live price  -  enter the exit price manually:');
     if(exitStr===null) return;
     exitPrice = parseFloat(exitStr); if(isNaN(exitPrice) || exitPrice<=0){ alert('Enter a valid price.'); return; }
   }
@@ -1607,38 +1493,21 @@ async function cDeleteEntry(id){
 }
 async function clearCryptoLog(){
   if(!cOrders.length){ alert('Nothing to clear — tap Refresh first.'); return; }
-  if(!confirm('Permanently delete all '+cOrders.length+' paper/manual trade(s)? This cannot be undone and will also clear them from the Command Center.')) return;
+  if(!confirm('Permanently delete all '+cOrders.length+' paper/manual trade(s)?')) return;
   const ids = cOrders.map(o => o.id);
   let failed = 0;
   for(const id of ids){
     try{ const r = await fetch(BASE+'/crypto-trade-log?id='+id, {method:'DELETE'}); if(!r.ok) failed++; }catch(e){ failed++; }
   }
   await loadCryptoOrders();
-  alert(failed ? (ids.length-failed)+' of '+ids.length+' deleted. '+failed+' failed — tap Clear Records again to retry.' : 'Paper/manual trade log cleared.');
+  alert(failed ? (ids.length-failed)+' of '+ids.length+' deleted.' : 'Paper/manual trade log cleared.');
 }
-
-/* ---- Delta Connection Center + dynamic market universe ---- */
 let deltaProducts = [];
-
 function openDeltaCredDb(){
   return new Promise((resolve,reject)=>{
     const req=indexedDB.open(DELTA_CRED_DB,1);
     req.onupgradeneeded=()=>{ if(!req.result.objectStoreNames.contains(DELTA_CRED_STORE)) req.result.createObjectStore(DELTA_CRED_STORE); };
     req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
-  });
-}
-function bufToB64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)));}
-function b64ToBuf(str){return Uint8Array.from(atob(str),c=>c.charCodeAt(0));}
-async function getLocalDeltaKey(){
-  const db=await openDeltaCredDb();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(DELTA_CRED_STORE,'readonly'); const r=tx.objectStore(DELTA_CRED_STORE).get('key');
-    r.onsuccess=async()=>{
-      if(r.result){resolve(await crypto.subtle.importKey('raw',b64ToBuf(r.result),{name:'AES-GCM'},false,['encrypt','decrypt']));return;}
-      const key=await crypto.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']);
-      const raw=await crypto.subtle.exportKey('raw',key);
-      const txw=db.transaction(DELTA_CRED_STORE,'readwrite'); txw.objectStore(DELTA_CRED_STORE).put(bufToB64(raw),'key'); txw.oncomplete=()=>resolve(key); txw.onerror=()=>reject(txw.error);
-    }; r.onerror=()=>reject(r.error);
   });
 }
 async function saveDeltaCredentials(){
@@ -1647,17 +1516,17 @@ async function saveDeltaCredentials(){
   const proxyUrl=(document.getElementById('deltaProxyUrl').value||'').trim();
   const st=document.getElementById('deltaCredentialStatus');
   if(!key||!secret){st.innerHTML='<span class="bad">Enter both API Key and API Secret.</span>';return false;}
-  if(!proxyUrl){st.innerHTML='<span class="bad">Enter the Noble Proxy URL too \u2014 the connection will fail without it.</span>';return false;}
+  if(!proxyUrl){st.innerHTML='<span class="bad">Enter the Noble Proxy URL too.</span>';return false;}
   try{
     const aes=await getLocalDeltaKey(); const iv=crypto.getRandomValues(new Uint8Array(12));
     const plain=new TextEncoder().encode(JSON.stringify({api_key:key,api_secret:secret,proxy_url:proxyUrl}));
     const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},aes,plain);
     const db=await openDeltaCredDb(); const tx=db.transaction(DELTA_CRED_STORE,'readwrite');
     tx.objectStore(DELTA_CRED_STORE).put({iv:bufToB64(iv),data:bufToB64(cipher)},'delta');
-    tx.oncomplete=()=>{st.innerHTML='<span class="good">Credentials saved securely on this device (including Noble proxy URL).</span>'; document.getElementById('deltaApiSecret').value=''; document.getElementById('deltaProxyUrl').value='';};
-    tx.onerror=()=>{st.innerHTML='<span class="bad">Could not save credentials on this device.</span>';};
+    tx.oncomplete=()=>{st.innerHTML='<span class="good">Credentials saved securely on this device.</span>'; document.getElementById('deltaApiSecret').value=''; document.getElementById('deltaProxyUrl').value='';};
+    tx.onerror=()=>{st.innerHTML='<span class="bad">Could not save credentials.</span>';};
     return true;
-  }catch(e){st.innerHTML='<span class="bad">Secure local storage is unavailable in this browser.</span>';return false;}
+  }catch(e){st.innerHTML='<span class="bad">Secure local storage is unavailable.</span>';return false;}
 }
 async function getDeltaCredentials(){
   try{
@@ -1669,41 +1538,37 @@ async function getDeltaCredentials(){
 }
 async function hasDeltaCredentials(){return !!(await getDeltaCredentials());}
 async function clearDeltaCredentials(){
-  try{const db=await openDeltaCredDb();const tx=db.transaction(DELTA_CRED_STORE,'readwrite');tx.objectStore(DELTA_CRED_STORE).delete('delta');tx.oncomplete=()=>{document.getElementById('deltaCredentialStatus').innerHTML='<span class="small">Saved credentials cleared from this browser.</span>';document.getElementById('deltaApiKey').value='';document.getElementById('deltaApiSecret').value='';document.getElementById('deltaProxyUrl').value='';document.getElementById('deltaConnectionStatus').textContent='No Delta credentials saved.';};}catch(e){}
+  try{const db=await openDeltaCredDb();const tx=db.transaction(DELTA_CRED_STORE,'readwrite');tx.objectStore(DELTA_CRED_STORE).delete('delta');tx.oncomplete=()=>{document.getElementById('deltaCredentialStatus').innerHTML='<span class="small">Saved credentials cleared.</span>';document.getElementById('deltaApiKey').value='';document.getElementById('deltaApiSecret').value='';document.getElementById('deltaProxyUrl').value='';};}catch(e){}
 }
 function toggleDeltaSecret(){const el=document.getElementById('deltaApiSecret');el.type=el.type==='password'?'text':'password';}
 function toggleDeltaProxy(){const el=document.getElementById('deltaProxyUrl');el.type=el.type==='password'?'text':'password';}
 async function loadDeltaCredentialState(){
   const st=document.getElementById('deltaCredentialStatus'); const creds=await getDeltaCredentials();
-  st.innerHTML=creds?('<span class="good">Encrypted Delta credentials are saved on this device'+(creds.proxy_url?' (including Noble proxy URL)':' \u2014 <b>Noble proxy URL missing, connection will fail</b>')+'.</span>'):'<span class="small">No credentials saved in this browser.</span>';
+  st.innerHTML=creds?('<span class="good">Encrypted Delta credentials are saved on this device.</span>'):'<span class="small">No credentials saved in this browser.</span>';
   if(creds) document.getElementById('deltaApiKey').value=creds.api_key||'';
 }
-
 async function deltaPrivate(action,extra){
   const creds=await getDeltaCredentials();
-  if(!creds) return {ok:false,error:'No Delta API credentials saved in this dashboard.'};
-  if(!creds.proxy_url) return {ok:false,error:'Noble proxy URL is missing \u2014 clear and re-save your Delta credentials including the proxy URL.'};
+  if(!creds) return {ok:false,error:'No Delta API credentials saved.'};
+  if(!creds.proxy_url) return {ok:false,error:'Noble proxy URL is missing.'};
   try{
     const r=await fetch(BASE+'/delta-connection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({action,api_key:creds.api_key,api_secret:creds.api_secret,proxy_url:creds.proxy_url},extra||{}))});
     return await r.json();
-  }catch(e){
-    return {ok:false,error:'Could not reach Delta connection service.'};
-  }
+  }catch(e){ return {ok:false,error:'Could not reach Delta connection service.'}; }
 }
 async function connectDelta(){
   const status=document.getElementById('deltaConnectionStatus');
   if(!(await hasDeltaCredentials())){status.innerHTML='<span class="bad">Save your Delta API Key and Secret first.</span>';return;}
   status.textContent='Testing Delta connection...';
-  try{const j=await deltaPrivate('connect');if(!j.ok){status.innerHTML='<span class="bad">Connection failed: '+(j.error||'Delta authentication failed.')+'</span>';return;}status.innerHTML='<span class="good">Connected - Delta API authenticated.</span>';loadCryptoPortfolio();}catch(e){status.innerHTML='<span class="bad">Could not reach Delta connection service.</span>'; }
+  try{const j=await deltaPrivate('connect');if(!j.ok){status.innerHTML='<span class="bad">Connection failed: '+(j.error||'Delta authentication failed.')+'</span>';return;}status.innerHTML='<span class="good">Connected - Delta API authenticated.</span>';loadCryptoPortfolio();}catch(e){status.innerHTML='<span class="bad">Could not reach Delta service.</span>'; }
 }
-async function disconnectDelta(){await clearDeltaCredentials();}
 async function loadDeltaConnectionState(){
   const status=document.getElementById('deltaConnectionStatus');
   if(!(await hasDeltaCredentials())){status.textContent='Enter and save your Delta credentials, then test the connection.';return;}
   status.textContent='Saved credentials found. Tap Test Delta Connection to verify.';
 }
 async function loadDeltaProducts(){
-  const st=document.getElementById('cryptoUniverseStatus'); try{const r=await fetch(BASE+'/delta-products');const j=await r.json();deltaProducts=j.products||[]; populateBacktestSymbols(); if(!deltaProducts.length){st.textContent='Delta market catalogue is empty  -  tap Scan Now after the catalogue sync is available.';return;} st.textContent=deltaProducts.length+' live perpetual markets available from Delta Exchange India.'; buildSymGrid(stratData?.symbols||[]); applyCryptoUniverse();}catch(e){st.textContent='Could not load Delta market catalogue.';}
+  const st=document.getElementById('cryptoUniverseStatus'); try{const r=await fetch(BASE+'/delta-products');const j=await r.json();deltaProducts=j.products||[]; populateBacktestSymbols(); if(!deltaProducts.length){st.textContent='Delta market catalogue is empty.';return;} st.textContent=deltaProducts.length+' live perpetual markets available from Delta Exchange India.'; buildSymGrid(stratData?.symbols||[]); applyCryptoUniverse();}catch(e){st.textContent='Could not load Delta market catalogue.';}
 }
 function selectedManualSymbols(){return Array.from(document.querySelectorAll('.symChk')).filter(c=>c.checked).map(c=>c.value);}
 function buildSymGrid(selected){
@@ -1733,7 +1598,6 @@ function renderBacktestSymbolOptions(keepValue){
   else sel.value = 'ALL';
 }
 function filterBacktestSymbols(){ renderBacktestSymbolOptions(document.getElementById('btSymbol')?.value||'ALL'); }
-
 async function loadStrategyConfig(){
   try{
     const r = await fetch(BASE+'/crypto-strategy-config'); const j = await r.json();
@@ -1742,12 +1606,14 @@ async function loadStrategyConfig(){
     const p = stratData.parameters || {};
     document.getElementById('stratNameLine').textContent = stratData.name+'  |  v'+stratData.version+'  |  '+stratData.timeframe+' timeframe';
     document.getElementById('stratEnabled').checked = !!stratData.enabled;
+    const tfSelect = document.getElementById('pTimeframe');
+    if (tfSelect && stratData.timeframe) tfSelect.value = stratData.timeframe;
     const u=document.getElementById('cryptoUniverse');
     if(u) u.value = (Array.isArray(stratData.symbols) && stratData.symbols.length) ? 'manual' : 'all';
     buildSymGrid(stratData.symbols || []);
     if(u && u.value!=='manual') applyCryptoUniverse();
     pEmaFast.value = p.ema_fast; pEmaSlow.value = p.ema_slow;
-    if(p.ema_trend !== undefined) pEmaTrend.value = p.ema_trend;
+    pEmaTrend.value = (p.ema_trend !== undefined ? p.ema_trend : 57);
     pRsiPeriod.value = p.rsi_period; pRsiLongMin.value = p.rsi_long_min; pRsiLongMax.value = p.rsi_long_max;
     pRsiShortMin.value = p.rsi_short_min; pRsiShortMax.value = p.rsi_short_max;
     pAtrPeriod.value = p.atr_period; pStopAtr.value = p.stop_atr_multiplier; pRR.value = p.reward_risk;
@@ -1770,9 +1636,10 @@ async function saveStrategyConfig(){
     enabled: stratEnabled.checked,
     universe: universeMode,
     symbols: selectedSymbols,
-    timeframe: stratData ? stratData.timeframe : '5m',
+    timeframe: document.getElementById('pTimeframe').value,
     parameters: {
-      ema_fast: parseFloat(pEmaFast.value), ema_slow: parseFloat(pEmaSlow.value),
+      ema_fast: parseFloat(pEmaFast.value), 
+      ema_slow: parseFloat(pEmaSlow.value),
       ema_trend: parseFloat(pEmaTrend.value),
       rsi_period: parseFloat(pRsiPeriod.value), rsi_long_min: parseFloat(pRsiLongMin.value), rsi_long_max: parseFloat(pRsiLongMax.value),
       rsi_short_min: parseFloat(pRsiShortMin.value), rsi_short_max: parseFloat(pRsiShortMax.value),
@@ -1800,8 +1667,6 @@ async function saveStrategyConfig(){
     } else { resEl.innerHTML = '<div class="errbox">'+(j.error||'Could not save')+'</div>'; }
   }catch(e){ resEl.innerHTML = '<div class="errbox">Could not reach backend.</div>'; }
 }
-
-/* ---- Backtest Center ---- */
 let btDays = 30; let btResultsData = null;
 function setBtDays(d){
   btDays = d;
@@ -1831,7 +1696,7 @@ async function runBacktest(){
   if(sym==='TOP10' || sym==='TOP25'){
     const n = sym==='TOP10' ? 10 : 25;
     const symbols = deltaProducts.map(p=>p.symbol).filter(Boolean).slice(0, n);
-    if(!symbols.length){ btStatus.innerHTML = '<div class="errbox">Market catalogue not loaded yet \u2014 try again in a moment.</div>'; return; }
+    if(!symbols.length){ btStatus.innerHTML = '<div class="errbox">Market catalogue not loaded yet.</div>'; return; }
     const results = []; let failed = 0;
     for(let i=0;i<symbols.length;i++){
       btStatus.innerHTML = '<div class="small">Backtesting '+symbols[i]+' ('+(i+1)+'/'+symbols.length+')...</div>';
@@ -1846,7 +1711,7 @@ async function runBacktest(){
     renderBacktestComparison(results);
     return;
   }
-  btStatus.innerHTML = '<div class="small">Running backtest on '+sym+' over '+btDays+' days... this can take a little while.</div>';
+  btStatus.innerHTML = '<div class="small">Running backtest on '+sym+' over '+btDays+' days...</div>';
   try{
     const q = new URLSearchParams({ symbol: sym, days: btDays, capital, riskPct: risk });
     const r = await fetch(BASE+'/crypto-backtest?'+q.toString()); const j = await r.json();
@@ -1892,7 +1757,7 @@ function metricGrid(m, trades){
     '</div>';
 }
 function tradeTable(trades){
-  if(!trades.length) return '<div class="small" style="margin-top:8px">No trades were triggered in this period  -  conditions never aligned.</div>';
+  if(!trades.length) return '<div class="small" style="margin-top:8px">No trades were triggered in this period.</div>';
   let html = '<div class="tbl-wrap"><table><tr><th>Exit Date</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>Net P&L</th><th>Ret%</th><th>Score</th></tr>';
   trades.forEach(t => {
     const netPnl = Number(t.netPnl ?? t.pnl ?? 0);
@@ -1917,15 +1782,12 @@ function renderBacktestSingle(res){
     const dbg = res.debug;
     dbgHtml = '<div class="sectionhead">Diagnostic (why this many trades)</div><div class="grid">'+
       '<div><div class="k">Candles simulated</div><div class="v">'+dbg.simulatedCandles+'</div></div>'+
-      '<div><div class="k">Signals with a NaN indicator</div><div class="v '+(dbg.nullRatePct>50?'bad':'')+'">'+dbg.nullSignals+' ('+dbg.nullRatePct.toFixed(1)+'%)</div></div>'+
-      '<div><div class="k">Valid signals evaluated</div><div class="v">'+dbg.nonNullSignals+'</div></div>'+
+      '<div><div class="k">Signals with NaN</div><div class="v '+(dbg.nullRatePct>50?'bad':'')+'">'+dbg.nullSignals+' ('+dbg.nullRatePct.toFixed(1)+'%)</div></div>'+
+      '<div><div class="k">Valid signals</div><div class="v">'+dbg.nonNullSignals+'</div></div>'+
       '<div><div class="k">Tradable (passed all gates)</div><div class="v">'+dbg.tradableSignals+'</div></div>'+
-      '<div><div class="k">Tradable but qty rounded to 0</div><div class="v '+(dbg.tradableQtyZero>0?'bad':'')+'">'+dbg.tradableQtyZero+'</div></div>'+
-      '<div><div class="k">Tradable with real qty (trades opened)</div><div class="v good">'+dbg.tradableQtyPositive+'</div></div>'+
-      '</div>'+
-      (dbg.nullRatePct>50 ? '<div class="errbox">Most candles have a NaN indicator (see breakdown below) \u2014 this is a real code issue, not just strategy strictness.<pre style="white-space:pre-wrap;font-size:11px;margin-top:6px">'+JSON.stringify(dbg.nonFinite,null,2)+'</pre></div>'
-        : dbg.tradableQtyZero>0 && dbg.tradableQtyPositive===0 ? '<div class="errbox">Signals ARE qualifying, but position size rounds to zero every time (lot_size='+res.lotSize+', min_order='+res.minimumOrderSize+', contract_value='+res.contractValue+').</div>'
-        : dbg.tradableSignals===0 ? '<div class="warnbox">No candles satisfied the strategy\'s score/ADX/MACD/volume/breakout gates in this period \u2014 not a bug, just no qualifying setup occurred.</div>' : '');
+      '<div><div class="k">Tradable but qty=0</div><div class="v '+(dbg.tradableQtyZero>0?'bad':'')+'">'+dbg.tradableQtyZero+'</div></div>'+
+      '<div><div class="k">Trades opened</div><div class="v good">'+dbg.tradableQtyPositive+'</div></div>'+
+      '</div>';
   }
   let html = '<div class="card"><h3 style="margin-top:0">'+res.symbol+'  -  Backtest Results</h3>'+
     '<div class="small">'+periodLine+'  |  '+res.candles+' candles</div>'+
@@ -1968,11 +1830,6 @@ function showBtDetail(sym){
     '<div class="card"><h3 style="margin-top:0">Trade-by-Trade</h3>'+tradeTable(res.trades)+'</div>';
   document.getElementById('btDetailArea').scrollIntoView({behavior:'smooth'});
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Risk Management UI Handlers
-// ═══════════════════════════════════════════════════════════════════════════════
-
 function calcSizing(){
   const entry = parseFloat(document.getElementById('sizingEntry').value);
   const stop = parseFloat(document.getElementById('sizingStop').value);
@@ -1985,7 +1842,6 @@ function calcSizing(){
     document.getElementById('sizingResult').innerHTML = html;
   }catch(e){ document.getElementById('sizingResult').innerHTML = '<span class="bad">Error: '+e.message+'</span>'; }
 }
-
 function calcCryptoSizing(){
   const entry = parseFloat(document.getElementById('cSizingEntry').value);
   const stop = parseFloat(document.getElementById('cSizingStop').value);
@@ -2000,7 +1856,6 @@ function calcCryptoSizing(){
     document.getElementById('cSizingResult').innerHTML = html;
   }catch(e){ document.getElementById('cSizingResult').innerHTML = '<span class="bad">Error: '+e.message+'</span>'; }
 }
-
 function loadSymbolScorecard(){
   if(!lastOrders || !lastOrders.length){ document.getElementById('scorecardTable').innerHTML = '<span class="small">Log some trades first.'; return; }
   const symbols = [...new Set(lastOrders.map(o=>o.symbol))];
@@ -2013,7 +1868,6 @@ function loadSymbolScorecard(){
   html += '</table>';
   document.getElementById('scorecardTable').innerHTML = html;
 }
-
 function loadCryptoSymbolScorecard(){
   if(!cOrders || !cOrders.length){ document.getElementById('cScorecardTable').innerHTML = '<span class="small">Log some trades first.'; return; }
   const symbols = [...new Set(cOrders.map(o=>o.symbol))];
@@ -2026,7 +1880,6 @@ function loadCryptoSymbolScorecard(){
   html += '</table>';
   document.getElementById('cScorecardTable').innerHTML = html;
 }
-
 function loadDrawdownChart(){
   if(!lastOrders || !lastOrders.length){ document.getElementById('drawdownChart').innerHTML = '<span class="small">Log some trades first.'; return; }
   const closed = lastOrders.filter(o => o.closedAt || o.exitPrice);
@@ -2044,7 +1897,6 @@ function loadDrawdownChart(){
   html += '</div>';
   document.getElementById('drawdownChart').innerHTML = html;
 }
-
 function loadCryptoDrawdownChart(){
   if(!cOrders || !cOrders.length){ document.getElementById('cDrawdownChart').innerHTML = '<span class="small">Log some trades first.'; return; }
   const closed = cOrders.filter(o => o.closedAt || o.exitPrice);
@@ -2062,7 +1914,6 @@ function loadCryptoDrawdownChart(){
   html += '</div>';
   document.getElementById('cDrawdownChart').innerHTML = html;
 }
-
 function updateGuardrails(){
   if(!lastOrders || !lastOrders.length) return;
   const today = new Date().toDateString();
@@ -2071,7 +1922,6 @@ function updateGuardrails(){
   const bannerColor = result.shouldStopTrading ? 'bad' : (result.todaysNetPnl > 0 ? 'good' : 'warn');
   document.getElementById('guardBanner').innerHTML = '<div class="'+bannerColor+'"><b>Today ('+today+'):</b> '+result.message+'<br>Net P&L: ₹'+result.todaysNetPnl.toFixed(2)+'  |  Losing streak: '+result.currentLosingStreak+'</div>';
 }
-
 function updateCryptoGuardrails(){
   if(!cOrders || !cOrders.length) return;
   const today = new Date().toDateString();
@@ -2080,7 +1930,6 @@ function updateCryptoGuardrails(){
   const bannerColor = result.shouldStopTrading ? 'bad' : (result.todaysNetPnl > 0 ? 'good' : 'warn');
   document.getElementById('cGuardBanner').innerHTML = '<div class="'+bannerColor+'"><b>Today ('+today+'):</b> '+result.message+'<br>Net P&L: $'+result.todaysNetPnl.toFixed(2)+'  |  Losing streak: '+result.currentLosingStreak+'</div>';
 }
-
 function loadHourlyChart(){
   if(!lastOrders || !lastOrders.length){ document.getElementById('hourlyChart').innerHTML = 'Log some trades first.'; return; }
   const buckets = bucketPnlByHour(lastOrders);
@@ -2097,7 +1946,6 @@ function loadHourlyChart(){
   }
   document.getElementById('hourlyChart').textContent = html;
 }
-
 function loadCryptoHourlyChart(){
   if(!cOrders || !cOrders.length){ document.getElementById('cHourlyChart').innerHTML = 'Log some trades first.'; return; }
   const buckets = bucketPnlByHour(cOrders);
@@ -2114,7 +1962,6 @@ function loadCryptoHourlyChart(){
   }
   document.getElementById('cHourlyChart').textContent = html;
 }
-
 function loadLiquidationMeters(){
   if(!lastDeltaFillsAnnotated || !lastDeltaFillsAnnotated.length){ document.getElementById('cLiquidationTable').innerHTML = '<span class="small">Load real history first.'; return; }
   if(!lastLiveOpenSymbols || !lastLiveOpenSymbols.size){ document.getElementById('cLiquidationTable').innerHTML = '<span class="small">No open positions.'; return; }
@@ -2126,16 +1973,11 @@ function loadLiquidationMeters(){
     const liqPrice = estimateLiquidationPrice({entryPrice: avgEntry, leverage: 5, side: fills[0].side==='buy' ? 'long' : 'short'});
     const curPrice = avgEntry; const distPct = liquidationDistancePct(curPrice, liqPrice)*100;
     const statusColor = distPct < 5 ? 'bad' : distPct < 15 ? 'warn' : 'good';
-    html += '<tr><td>'+esc(sym)+'</td><td>'+fills.map(f=>f.size||0).reduce((a,b)=>a+b,0).toFixed(3)+'</td><td>'+avgEntry.toFixed(2)+'</td><td>'+liqPrice.toFixed(2)+'</td><td class="'+statusColor+'">'+distPct.toFixed(1)+'%</td><td class="'+statusColor+'"><b>'+(distPct<5?'🔴 DANGER':distPct<15?'🟡 CAUTION':'🟢 SAFE')+'</b></td></tr>';
+    html += '<tr><td>'+esc(sym)+'</td><td>'+fills.map(f=>f.size||0).reduce((a,b)=>a+b,0).toFixed(3)+'</td><td>'+avgEntry.toFixed(2)+'</td><td>'+liqPrice.toFixed(2)+'</td><td class="'+statusColor+'">'+distPct.toFixed(1)+'%</td><td class="'+statusColor+'"><b>'+(distPct<5?'DANGER':distPct<15?'CAUTION':'SAFE')+'</b></td></tr>';
   });
   html += '</table>';
   document.getElementById('cLiquidationTable').innerHTML = html;
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Risk Management Utilities (adapted from riskManagement.ts to vanilla JS)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 function calculatePositionSize(input){
   const {accountEquity, riskPerTradePct, entryPrice, stopPrice, leverage=1, maxPositionValue} = input;
   if(entryPrice<=0 || stopPrice<=0) throw new Error("entryPrice and stopPrice must be positive");
@@ -2151,7 +1993,6 @@ function calculatePositionSize(input){
   }
   return {riskAmount, stopDistance, stopDistancePct, qty, positionValue, cappedByMaxValue, marginRequired: positionValue/leverage};
 }
-
 function calculateRMultiple(trade){
   const {entryPrice, exitPrice, stopPrice, side} = trade;
   const riskPerUnit = Math.abs(entryPrice - stopPrice);
@@ -2159,7 +2000,6 @@ function calculateRMultiple(trade){
   const rawMove = side==='buy' ? exitPrice-entryPrice : entryPrice-exitPrice;
   return rawMove / riskPerUnit;
 }
-
 function calculateExpectancy(trades){
   const closed = trades.filter(t => t.realisedPnl && t.realisedPnl!==0);
   const wins = closed.filter(t => t.realisedPnl > 0);
@@ -2172,7 +2012,6 @@ function calculateExpectancy(trades){
   const avgLoss = losses.length ? grossLoss/losses.length : 0;
   return {winRate, lossRate, avgWin, avgLoss, expectancy: winRate*avgWin - lossRate*avgLoss, profitFactor: grossLoss>0 ? grossProfit/grossLoss : Infinity, sampleSize: closed.length};
 }
-
 function checkDailyGuardrail(input){
   const {todaysTrades, dailyLossLimit, maxLosingStreak=3} = input;
   const netPnl = todaysTrades.reduce((s,t)=>s+(t.realisedPnl||0)-(t.fees||0), 0);
@@ -2187,7 +2026,6 @@ function checkDailyGuardrail(input){
   const message = limitBreached ? `Daily loss limit hit (₹${netPnl.toFixed(2)} ≤ -${dailyLossLimit}). Stop for today.` : streakBreached ? `${maxStreak} losing trades in a row. Step away.` : "Within limits.";
   return {todaysNetPnl: netPnl, limitBreached, currentLosingStreak: maxStreak, streakBreached, shouldStopTrading, message};
 }
-
 function calculateMaxDrawdown(cumulativePnlSeries, startingEquity){
   let peak = -Infinity, peakIndex = 0, maxDD = 0, ddPeakIndex = 0, ddTroughIndex = 0;
   cumulativePnlSeries.forEach((value,i)=>{
@@ -2197,7 +2035,6 @@ function calculateMaxDrawdown(cumulativePnlSeries, startingEquity){
   });
   return {maxDrawdown: maxDD, maxDrawdownPct: startingEquity ? maxDD/(startingEquity+peak) : undefined, peakIndex: ddPeakIndex, troughIndex: ddTroughIndex};
 }
-
 function buildSymbolScorecard(symbol, trades){
   const symTrades = trades.filter(t=>t.symbol===symbol);
   const exp = calculateExpectancy(symTrades);
@@ -2209,7 +2046,6 @@ function buildSymbolScorecard(symbol, trades){
   const verdict = (netPnl>0 && exp.expectancy>0) ? 'favor' : (netPnl<-50) ? 'avoid' : 'neutral';
   return {symbol, trades: symTrades.length, netPnl, winRate: exp.winRate, expectancy: exp.expectancy, avgHoldTimeMinutes, fees: symTrades.reduce((s,t)=>s+(t.fees||0),0), verdict};
 }
-
 function bucketPnlByHour(trades, timezoneOffsetMinutes=330){
   const buckets = {};
   for(let h=0;h<24;h++) buckets[h]={count:0,pnl:0,fees:0};
@@ -2220,18 +2056,17 @@ function bucketPnlByHour(trades, timezoneOffsetMinutes=330){
   }
   return buckets;
 }
-
 function estimateLiquidationPrice(input){
   const {entryPrice, leverage, side, maintenanceMarginRate=0.005} = input;
   const initialMarginRate = 1/leverage;
   if(side==='long') return entryPrice * (1 - initialMarginRate + maintenanceMarginRate);
   return entryPrice * (1 + initialMarginRate - maintenanceMarginRate);
 }
-
 function liquidationDistancePct(currentPrice, liquidationPrice){
   return Math.abs(currentPrice - liquidationPrice) / currentPrice;
 }
-
-checkAuth(); loadSettings(); loadMargins(); loadPositions(); loadOrders(); updateFormLabels(); setMode('budget'); setUniverse('large'); setStyle('pullback');
-loadCryptoSettings(); loadDeltaCredentialState(); loadDeltaConnectionState(); loadDeltaProducts(); loadCryptoOrders(); loadStrategyConfig(); setBtDays(30); loadKiteCredentialState(); finishKiteCallback(); checkAuth();
+window.addEventListener('DOMContentLoaded', ()=>{
+  checkAuth(); loadSettings(); loadMargins(); loadPositions(); loadOrders(); updateFormLabels(); setMode('budget'); setUniverse('large'); setStyle('pullback');
+  loadCryptoSettings(); loadDeltaCredentialState(); loadDeltaConnectionState(); loadDeltaProducts(); loadCryptoOrders(); loadStrategyConfig(); setBtDays(30); loadKiteCredentialState(); finishKiteCallback(); checkAuth();
+});
 </script></body></html>
