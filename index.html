@@ -358,7 +358,11 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="symgrid" id="symGrid"></div>
 
 <div class="sectionhead">Trend (EMA)</div>
-<div class="row2"><div><label>EMA fast</label><input id="pEmaFast" type="number"></div><div><label>EMA slow</label><input id="pEmaSlow" type="number"></div></div>
+<div class="row3">
+  <div><label>EMA fast</label><input id="pEmaFast" type="number"></div>
+  <div><label>EMA slow</label><input id="pEmaSlow" type="number"></div>
+  <div><label>EMA trend (57)</label><input id="pEmaTrend" type="number"></div>
+</div>
 
 <div class="sectionhead">Momentum (RSI)</div>
 <div class="row2"><div><label>RSI period</label><input id="pRsiPeriod" type="number"></div><div></div></div>
@@ -1730,6 +1734,7 @@ async function loadStrategyConfig(){
     buildSymGrid(stratData.symbols || []);
     if(u && u.value!=='manual') applyCryptoUniverse();
     pEmaFast.value = p.ema_fast; pEmaSlow.value = p.ema_slow;
+    if(p.ema_trend !== undefined) pEmaTrend.value = p.ema_trend;
     pRsiPeriod.value = p.rsi_period; pRsiLongMin.value = p.rsi_long_min; pRsiLongMax.value = p.rsi_long_max;
     pRsiShortMin.value = p.rsi_short_min; pRsiShortMax.value = p.rsi_short_max;
     pAtrPeriod.value = p.atr_period; pStopAtr.value = p.stop_atr_multiplier; pRR.value = p.reward_risk;
@@ -1755,6 +1760,7 @@ async function saveStrategyConfig(){
     timeframe: stratData ? stratData.timeframe : '5m',
     parameters: {
       ema_fast: parseFloat(pEmaFast.value), ema_slow: parseFloat(pEmaSlow.value),
+      ema_trend: parseFloat(pEmaTrend.value),
       rsi_period: parseFloat(pRsiPeriod.value), rsi_long_min: parseFloat(pRsiLongMin.value), rsi_long_max: parseFloat(pRsiLongMax.value),
       rsi_short_min: parseFloat(pRsiShortMin.value), rsi_short_max: parseFloat(pRsiShortMax.value),
       atr_period: parseFloat(pAtrPeriod.value), stop_atr_multiplier: parseFloat(pStopAtr.value), reward_risk: parseFloat(pRR.value),
