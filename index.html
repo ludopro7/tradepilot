@@ -356,7 +356,20 @@ input:checked + .slider:before{transform:translateX(20px)}
 <div class="row2"><div><label>Universe</label><select id="cryptoUniverse" onchange="applyCryptoUniverse()"><option value="all">All live perpetuals</option><option value="top10">Top 10 by turnover</option><option value="top25">Top 25 by turnover</option><option value="top50">Top 50 by turnover</option><option value="manual">Manual selection</option></select></div><div><label>Search markets</label><input id="cryptoSymbolSearch" placeholder="BTC, ETH, SOL..." oninput="filterCryptoSymbols()"></div></div>
 <div class="small" id="cryptoUniverseStatus">Loading Delta Exchange India market catalogue...</div>
 <div class="symgrid" id="symGrid"></div>
-
+<div class="sectionhead">Market Timeframe</div>
+<div class="row2">
+  <div>
+    <label>Chart Timeframe</label>
+    <select id="pTimeframe">
+      <option value="5m">5 Minutes (Scalping)</option>
+      <option value="15m">15 Minutes (Intraday)</option>
+      <option value="1h" selected>1 Hour (Swing - Recommended)</option>
+      <option value="4h">4 Hours (Position)</option>
+      <option value="1d">1 Day (Long-term)</option>
+    </select>
+  </div>
+  <div></div>
+</div>
 <div class="sectionhead">Trend (EMA)</div>
 <div class="row3">
   <div><label>EMA fast</label><input id="pEmaFast" type="number"></div>
